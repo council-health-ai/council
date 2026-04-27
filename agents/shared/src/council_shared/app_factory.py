@@ -62,8 +62,35 @@ def create_a2a_app(
     )
 
     a2a_app = A2AStarletteApplication(agent_card=card, http_handler=handler)
-    # build() at the v1 well-known path; we'll add v0 alias separately
-    starlette_app = a2a_app.build(agent_card_url="/.well-known/agent-card.json", rpc_url="/")
+    # Park the SDK's default agent-card route on an internal path so we can override the
+    # well-known paths with a card-shape that includes v1's `supportedInterfaces`.
+    # The Prompt Opinion platform's parser requires that field; a2a-sdk 0.3.x emits only
+    # `additionalInterfaces` (v0 shape), so we transform on the way out.
+    starlette_app = a2a_app.build(agent_card_url="/_internal/a2a-card", rpc_url="/")
+
+    def card_dump() -> dict:
+        base = card.model_dump(mode="json", by_alias=True, exclude_none=True)
+        # PO requires v1's `supportedInterfaces`. Build it from v0.3 fields.
+        supported_interfaces = []
+        # additionalInterfaces (v0.3 list)
+        for iface in base.get("additionalInterfaces", []) or []:
+            supported_interfaces.append({
+                "url": iface.get("url"),
+                "protocolBinding": iface.get("transport") or "JSONRPC",
+                "protocolVersion": "1.0",
+            })
+        # Always include the top-level url + preferredTransport as one interface too
+        if base.get("url"):
+            top_iface = {
+                "url": base["url"],
+                "protocolBinding": base.get("preferredTransport") or "JSONRPC",
+                "protocolVersion": "1.0",
+            }
+            if top_iface not in supported_interfaces:
+                supported_interfaces.insert(0, top_iface)
+        if supported_interfaces:
+            base["supportedInterfaces"] = supported_interfaces
+        return base
 
     # ── extra routes ─────────────────────────────────────────────────
     async def healthz(_request: Request) -> JSONResponse:
@@ -78,14 +105,15 @@ def create_a2a_app(
             "rpc": "POST /",
         })
 
-    def card_dump() -> dict:
-        return card.model_dump(mode="json", by_alias=True, exclude_none=True)
+    async def agent_card_v1(_request: Request) -> JSONResponse:
+        return JSONResponse(card_dump())
 
     async def agent_card_v0(_request: Request) -> JSONResponse:
         return JSONResponse(card_dump())
 
     starlette_app.add_route("/healthz", healthz, methods=["GET"])
     starlette_app.add_route("/", root, methods=["GET"])
+    starlette_app.add_route("/.well-known/agent-card.json", agent_card_v1, methods=["GET"])
     starlette_app.add_route("/.well-known/agent.json", agent_card_v0, methods=["GET"])
 
     # ── middleware ───────────────────────────────────────────────────
