@@ -70,16 +70,15 @@ def create_a2a_app(
 
     def card_dump() -> dict:
         base = card.model_dump(mode="json", by_alias=True, exclude_none=True)
-        # PO requires v1's `supportedInterfaces`. Build it from v0.3 fields.
+
+        # 1. PO requires v1's `supportedInterfaces`. Build it from v0.3 fields.
         supported_interfaces = []
-        # additionalInterfaces (v0.3 list)
         for iface in base.get("additionalInterfaces", []) or []:
             supported_interfaces.append({
                 "url": iface.get("url"),
                 "protocolBinding": iface.get("transport") or "JSONRPC",
                 "protocolVersion": "1.0",
             })
-        # Always include the top-level url + preferredTransport as one interface too
         if base.get("url"):
             top_iface = {
                 "url": base["url"],
@@ -90,6 +89,37 @@ def create_a2a_app(
                 supported_interfaces.insert(0, top_iface)
         if supported_interfaces:
             base["supportedInterfaces"] = supported_interfaces
+
+        # 2. PO expects v1's nested-key security-scheme shape with `location` (not `in`).
+        # a2a-sdk 0.3 emits the flat OpenAPI shape; transform here.
+        schemes = base.get("securitySchemes")
+        if schemes:
+            transformed = {}
+            for key, scheme in schemes.items():
+                if not isinstance(scheme, dict):
+                    transformed[key] = scheme
+                    continue
+                t = scheme.get("type")
+                if t == "apiKey":
+                    transformed[key] = {
+                        "apiKeySecurityScheme": {
+                            "name": scheme.get("name"),
+                            "location": scheme.get("in") or scheme.get("location"),
+                            "description": scheme.get("description"),
+                        }
+                    }
+                elif t in ("http", "httpAuth"):
+                    transformed[key] = {"httpAuthSecurityScheme": scheme}
+                elif t == "oauth2":
+                    transformed[key] = {"oauth2SecurityScheme": scheme}
+                elif t == "openIdConnect":
+                    transformed[key] = {"openIdConnectSecurityScheme": scheme}
+                elif t == "mutualTLS":
+                    transformed[key] = {"mtlsSecurityScheme": scheme}
+                else:
+                    transformed[key] = scheme
+            base["securitySchemes"] = transformed
+
         return base
 
     # ── extra routes ─────────────────────────────────────────────────
