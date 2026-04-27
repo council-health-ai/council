@@ -1,0 +1,54 @@
+# Secrets — NEVER commit
+.env
+.env.*
+!.env.example
+!.env.template
+*.pem
+*.key
+
+# Node / TS
+node_modules/
+dist/
+build/
+.turbo/
+*.tsbuildinfo
+.npm/
+.pnpm-store/
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+.venv/
+venv/
+.uv-cache/
+.ruff_cache/
+.pytest_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+*.egg-info/
+.eggs/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
+!.vscode/settings.shared.json
+
+# Build artifacts
+*.log
+.cache/
+tmp/
+
+# Hugging Face
+.huggingface/
+
+# Local generated
+.council-local/
+.deploy/

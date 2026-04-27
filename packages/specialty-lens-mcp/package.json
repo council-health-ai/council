@@ -1,0 +1,40 @@
+{
+  "name": "@council-health/specialty-lens-mcp",
+  "version": "0.1.0",
+  "private": true,
+  "description": "SHARP-on-MCP server exposing 8 healthcare specialty lenses + concordance tools for The Council.",
+  "license": "MIT",
+  "type": "module",
+  "main": "src/index.ts",
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "start": "tsx src/index.ts",
+    "build": "tsc --noEmit",
+    "lint": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "@google/genai": "^1.10.0",
+    "@modelcontextprotocol/sdk": "^1.25.1",
+    "@sentry/node": "^9.1.0",
+    "@supabase/supabase-js": "^2.46.1",
+    "axios": "^1.9.0",
+    "cors": "^2.8.5",
+    "express": "^5.1.0",
+    "jose": "^5.9.6",
+    "pino": "^9.5.0",
+    "pino-http": "^10.3.0",
+    "zod": "^3.25.28"
+  },
+  "devDependencies": {
+    "@types/cors": "^2.8.17",
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.10.2",
+    "@types/supertest": "^6.0.2",
+    "supertest": "^7.0.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2",
+    "vitest": "^2.1.8"
+  }
+}

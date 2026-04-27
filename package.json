@@ -1,0 +1,28 @@
+{
+  "name": "council",
+  "version": "0.1.0",
+  "private": true,
+  "description": "The Council — A2A specialty convening for patients with too many doctors.",
+  "license": "MIT",
+  "homepage": "https://github.com/council-health-ai/council",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/council-health-ai/council.git"
+  },
+  "packageManager": "pnpm@8.15.6",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "turbo run lint",
+    "test": "turbo run test",
+    "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\""
+  },
+  "devDependencies": {
+    "prettier": "^3.4.2",
+    "turbo": "^2.3.3",
+    "typescript": "^5.7.2"
+  }
+}

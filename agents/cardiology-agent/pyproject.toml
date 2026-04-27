@@ -1,0 +1,18 @@
+[project]
+name = "cardiology-agent"
+version = "0.1.0"
+description = "Cardiology specialty agent — A2A peer in The Council."
+requires-python = ">=3.11,<3.13"
+dependencies = [
+    "council-shared",
+]
+
+[tool.uv.sources]
+council-shared = { workspace = true }
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/cardiology_agent"]

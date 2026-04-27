@@ -1,0 +1,34 @@
+name: Keep HF Spaces warm
+
+# Pings every Space's /healthz every 6 hours to keep them awake (HF Spaces sleep
+# after 48 h idle on the free tier). Public agent endpoints stay responsive
+# when invoked from the Prompt Opinion platform.
+
+on:
+  schedule:
+    - cron: "0 */6 * * *"
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        service:
+          - specialty-lens-mcp
+          - convener
+          - cardiology
+          - oncology
+          - nephrology
+          - endocrine
+          - obstetrics
+          - pediatrics
+          - psychiatry
+          - anesthesia
+    steps:
+      - name: Ping ${{ matrix.service }}
+        run: |
+          url="https://council-health-ai-${{ matrix.service }}.hf.space/healthz"
+          echo "Pinging $url"
+          curl -fsS --max-time 60 "$url" || echo "warn: $url not yet healthy"

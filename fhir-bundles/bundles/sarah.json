@@ -1,0 +1,563 @@
+{
+  "resourceType": "Bundle",
+  "id": "bundle-sarah",
+  "type": "transaction",
+  "timestamp": "2026-04-27T21:10:37.642331+00:00",
+  "entry": [
+    {
+      "fullUrl": "urn:uuid:patient-sarah-32",
+      "resource": {
+        "resourceType": "Patient",
+        "id": "patient-sarah-32",
+        "active": true,
+        "name": [
+          {
+            "use": "official",
+            "family": "Williams",
+            "given": [
+              "Sarah"
+            ]
+          }
+        ],
+        "gender": "female",
+        "birthDate": "1994-01-09",
+        "address": [
+          {
+            "use": "home",
+            "country": "US"
+          }
+        ],
+        "extension": [
+          {
+            "url": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-race",
+            "extension": [
+              {
+                "url": "text",
+                "valueString": "Synthetic"
+              }
+            ]
+          }
+        ]
+      },
+      "request": {
+        "method": "PUT",
+        "url": "Patient/patient-sarah-32"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:enc-sarah-mfm-2026-04",
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-sarah-mfm-2026-04",
+        "status": "finished",
+        "class": {
+          "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+          "code": "AMB",
+          "display": "ambulatory"
+        },
+        "type": [
+          {
+            "coding": [
+              {
+                "system": "http://snomed.info/sct",
+                "code": "11429006",
+                "display": "Consultation"
+              }
+            ],
+            "text": "Consultation"
+          }
+        ],
+        "subject": {
+          "reference": "Patient/patient-sarah-32"
+        },
+        "period": {
+          "start": "2026-04-20",
+          "end": "2026-04-20"
+        },
+        "reasonCode": [
+          {
+            "text": "MFM follow-up \u2014 28w gestation, T1DM, chronic HTN, prior PE on prophylactic anticoag"
+          }
+        ]
+      },
+      "request": {
+        "method": "PUT",
+        "url": "Encounter/enc-sarah-mfm-2026-04"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:cond-sarah-pregnancy",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "cond-sarah-pregnancy",
+        "clinicalStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+              "code": "active",
+              "display": "Active"
+            }
+          ],
+          "text": "Active"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "confirmed",
+              "display": "Confirmed"
+            }
+          ],
+          "text": "Confirmed"
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://snomed.info/sct",
+              "code": "77386006",
+              "display": "Pregnancy"
+            }
+          ],
+          "text": "Pregnancy"
+        },
+        "subject": {
+          "reference": "Patient/patient-sarah-32"
+        },
+        "onsetDateTime": "2025-10-13",
+        "recordedDate": "2025-10-13",
+        "note": [
+          {
+            "text": "Singleton intrauterine pregnancy. EGA 28w0d as of 2026-04-20."
+          }
+        ]
+      },
+      "request": {
+        "method": "PUT",
+        "url": "Condition/cond-sarah-pregnancy"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:cond-sarah-t1dm",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "cond-sarah-t1dm",
+        "clinicalStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+              "code": "active",
+              "display": "Active"
+            }
+          ],
+          "text": "Active"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "confirmed",
+              "display": "Confirmed"
+            }
+          ],
+          "text": "Confirmed"
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://snomed.info/sct",
+              "code": "46635009",
+              "display": "Type 1 diabetes mellitus"
+            }
+          ],
+          "text": "Type 1 diabetes mellitus"
+        },
+        "subject": {
+          "reference": "Patient/patient-sarah-32"
+        },
+        "onsetDateTime": "2008-05-01",
+        "recordedDate": "2008-05-01",
+        "note": [
+          {
+            "text": "On insulin pump (CSII). HbA1c 6.8%."
+          }
+        ]
+      },
+      "request": {
+        "method": "PUT",
+        "url": "Condition/cond-sarah-t1dm"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:cond-sarah-htn",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "cond-sarah-htn",
+        "clinicalStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+              "code": "active",
+              "display": "Active"
+            }
+          ],
+          "text": "Active"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "confirmed",
+              "display": "Confirmed"
+            }
+          ],
+          "text": "Confirmed"
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://snomed.info/sct",
+              "code": "38341003",
+              "display": "Hypertensive disorder"
+            }
+          ],
+          "text": "Hypertensive disorder"
+        },
+        "subject": {
+          "reference": "Patient/patient-sarah-32"
+        },
+        "onsetDateTime": "2022-04-01",
+        "recordedDate": "2022-04-01",
+        "note": [
+          {
+            "text": "Chronic HTN preceding pregnancy. On labetalol (pregnancy-safe)."
+          }
+        ]
+      },
+      "request": {
+        "method": "PUT",
+        "url": "Condition/cond-sarah-htn"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:cond-sarah-pe-history",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "cond-sarah-pe-history",
+        "clinicalStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+              "code": "resolved",
+              "display": "Resolved"
+            }
+          ],
+          "text": "Resolved"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "confirmed",
+              "display": "Confirmed"
+            }
+          ],
+          "text": "Confirmed"
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://snomed.info/sct",
+              "code": "59282003",
+              "display": "Pulmonary embolism"
+            }
+          ],
+          "text": "Pulmonary embolism"
+        },
+        "subject": {
+          "reference": "Patient/patient-sarah-32"
+        },
+        "onsetDateTime": "2024-06-22",
+        "recordedDate": "2024-06-22",
+        "note": [
+          {
+            "text": "Submassive PE in 2024 on combined OCP. Completed 6 months therapeutic anticoag. Now on prophylactic LMWH for pregnancy."
+          }
+        ]
+      },
+      "request": {
+        "method": "PUT",
+        "url": "Condition/cond-sarah-pe-history"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:med-sarah-enoxaparin",
+      "resource": {
+        "resourceType": "MedicationStatement",
+        "id": "med-sarah-enoxaparin",
+        "status": "active",
+        "medicationCodeableConcept": {
+          "coding": [
+            {
+              "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+              "code": "854228",
+              "display": "Enoxaparin Sodium 40 MG/0.4ML Prefilled Syringe"
+            }
+          ],
+          "text": "Enoxaparin Sodium 40 MG/0.4ML Prefilled Syringe"
+        },
+        "subject": {
+          "reference": "Patient/patient-sarah-32"
+        },
+        "effectiveDateTime": "2025-11-01",
+        "dateAsserted": "2025-11-01",
+        "dosage": [
+          {
+            "text": "40 mg oral QD",
+            "route": {
+              "coding": [
+                {
+                  "system": "http://snomed.info/sct",
+                  "code": "26643006",
+                  "display": "Oral route"
+                }
+              ],
+              "text": "Oral route"
+            }
+          }
+        ],
+        "reasonCode": [
+          {
+            "text": "Prophylactic anticoagulation in pregnancy with prior VTE"
+          }
+        ]
+      },
+      "request": {
+        "method": "PUT",
+        "url": "MedicationStatement/med-sarah-enoxaparin"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:med-sarah-labetalol",
+      "resource": {
+        "resourceType": "MedicationStatement",
+        "id": "med-sarah-labetalol",
+        "status": "active",
+        "medicationCodeableConcept": {
+          "coding": [
+            {
+              "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+              "code": "855334",
+              "display": "Labetalol Hydrochloride 200 MG Oral Tablet"
+            }
+          ],
+          "text": "Labetalol Hydrochloride 200 MG Oral Tablet"
+        },
+        "subject": {
+          "reference": "Patient/patient-sarah-32"
+        },
+        "effectiveDateTime": "2022-04-15",
+        "dateAsserted": "2022-04-15",
+        "dosage": [
+          {
+            "text": "200 mg oral BID",
+            "route": {
+              "coding": [
+                {
+                  "system": "http://snomed.info/sct",
+                  "code": "26643006",
+                  "display": "Oral route"
+                }
+              ],
+              "text": "Oral route"
+            }
+          }
+        ],
+        "reasonCode": [
+          {
+            "text": "Chronic HTN \u2014 pregnancy-safe agent"
+          }
+        ]
+      },
+      "request": {
+        "method": "PUT",
+        "url": "MedicationStatement/med-sarah-labetalol"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:med-sarah-aspirin",
+      "resource": {
+        "resourceType": "MedicationStatement",
+        "id": "med-sarah-aspirin",
+        "status": "active",
+        "medicationCodeableConcept": {
+          "coding": [
+            {
+              "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+              "code": "243670",
+              "display": "Aspirin 81 MG Oral Tablet"
+            }
+          ],
+          "text": "Aspirin 81 MG Oral Tablet"
+        },
+        "subject": {
+          "reference": "Patient/patient-sarah-32"
+        },
+        "effectiveDateTime": "2025-12-01",
+        "dateAsserted": "2025-12-01",
+        "dosage": [
+          {
+            "text": "81 mg oral QD",
+            "route": {
+              "coding": [
+                {
+                  "system": "http://snomed.info/sct",
+                  "code": "26643006",
+                  "display": "Oral route"
+                }
+              ],
+              "text": "Oral route"
+            }
+          }
+        ],
+        "reasonCode": [
+          {
+            "text": "Preeclampsia prophylaxis (USPSTF-aligned for high-risk patients)"
+          }
+        ]
+      },
+      "request": {
+        "method": "PUT",
+        "url": "MedicationStatement/med-sarah-aspirin"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:obs-sarah-hba1c",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "obs-sarah-hba1c",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory",
+                "display": "Laboratory"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "4548-4",
+              "display": "Hemoglobin A1c"
+            }
+          ],
+          "text": "Hemoglobin A1c"
+        },
+        "subject": {
+          "reference": "Patient/patient-sarah-32"
+        },
+        "effectiveDateTime": "2026-04-15",
+        "valueQuantity": {
+          "value": 6.8,
+          "unit": "%",
+          "system": "http://unitsofmeasure.org",
+          "code": "%"
+        }
+      },
+      "request": {
+        "method": "PUT",
+        "url": "Observation/obs-sarah-hba1c"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:obs-sarah-bp-sys",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "obs-sarah-bp-sys",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "vital-signs",
+                "display": "Vital-signs"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "8480-6",
+              "display": "Systolic blood pressure"
+            }
+          ],
+          "text": "Systolic blood pressure"
+        },
+        "subject": {
+          "reference": "Patient/patient-sarah-32"
+        },
+        "effectiveDateTime": "2026-04-20",
+        "valueQuantity": {
+          "value": 128,
+          "unit": "mmHg",
+          "system": "http://unitsofmeasure.org",
+          "code": "mm[Hg]"
+        }
+      },
+      "request": {
+        "method": "PUT",
+        "url": "Observation/obs-sarah-bp-sys"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:obs-sarah-bp-dia",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "obs-sarah-bp-dia",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "vital-signs",
+                "display": "Vital-signs"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "8462-4",
+              "display": "Diastolic blood pressure"
+            }
+          ],
+          "text": "Diastolic blood pressure"
+        },
+        "subject": {
+          "reference": "Patient/patient-sarah-32"
+        },
+        "effectiveDateTime": "2026-04-20",
+        "valueQuantity": {
+          "value": 82,
+          "unit": "mmHg",
+          "system": "http://unitsofmeasure.org",
+          "code": "mm[Hg]"
+        }
+      },
+      "request": {
+        "method": "PUT",
+        "url": "Observation/obs-sarah-bp-dia"
+      }
+    }
+  ]
+}

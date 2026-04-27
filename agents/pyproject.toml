@@ -1,0 +1,27 @@
+[project]
+name = "council-agents"
+version = "0.1.0"
+description = "The Council's 9 A2A agents — Convener + 8 specialty peers."
+requires-python = ">=3.11,<3.13"
+
+[tool.uv.workspace]
+members = [
+    "shared",
+    "convener",
+    "cardiology-agent",
+    "oncology-agent",
+    "nephrology-agent",
+    "endocrine-agent",
+    "obstetrics-agent",
+    "pediatrics-agent",
+    "psychiatry-agent",
+    "anesthesia-agent",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.3.0",
+    "pytest-asyncio>=0.24.0",
+    "ruff>=0.7.0",
+    "honcho>=2.0.0",
+]

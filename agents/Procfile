@@ -1,0 +1,9 @@
+convener:    uv run uvicorn convener.app:a2a_app             --host 0.0.0.0 --port 8000 --log-level info
+cardiology:  uv run uvicorn cardiology_agent.app:a2a_app      --host 0.0.0.0 --port 8001 --log-level info
+oncology:    uv run uvicorn oncology_agent.app:a2a_app        --host 0.0.0.0 --port 8002 --log-level info
+nephrology:  uv run uvicorn nephrology_agent.app:a2a_app      --host 0.0.0.0 --port 8003 --log-level info
+endocrine:   uv run uvicorn endocrine_agent.app:a2a_app       --host 0.0.0.0 --port 8004 --log-level info
+obstetrics:  uv run uvicorn obstetrics_agent.app:a2a_app      --host 0.0.0.0 --port 8005 --log-level info
+pediatrics:  uv run uvicorn pediatrics_agent.app:a2a_app      --host 0.0.0.0 --port 8006 --log-level info
+psychiatry:  uv run uvicorn psychiatry_agent.app:a2a_app      --host 0.0.0.0 --port 8007 --log-level info
+anesthesia:  uv run uvicorn anesthesia_agent.app:a2a_app      --host 0.0.0.0 --port 8008 --log-level info
