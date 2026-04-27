@@ -1,13 +1,42 @@
-"""Centralized env config with safe defaults."""
+"""Centralized env config with safe defaults.
+
+Side effect on import: if GCP_SA_KEY_JSON is set (the full service-account JSON
+content as a string), materialize it to /tmp/gcp-sa.json and point
+GOOGLE_APPLICATION_CREDENTIALS at it. This lets HF Spaces hold the Vertex AI
+service account as a single secret env var (Spaces can't easily store files).
+"""
 
 from __future__ import annotations
 
 import os
 from dataclasses import dataclass, field
+from pathlib import Path
 
 from dotenv import load_dotenv
 
 load_dotenv()
+
+
+# ── Vertex AI bootstrap (HF Space friendly) ─────────────────────────────
+def _materialize_vertex_sa() -> None:
+    """If GCP_SA_KEY_JSON env var is set, write it to a tmp file and export
+    GOOGLE_APPLICATION_CREDENTIALS so the google-genai SDK auto-detects Vertex.
+    """
+    sa_json = os.getenv("GCP_SA_KEY_JSON", "").strip()
+    if not sa_json:
+        return
+    target = Path("/tmp/gcp-sa.json")
+    try:
+        target.write_text(sa_json)
+        target.chmod(0o600)
+        os.environ.setdefault("GOOGLE_APPLICATION_CREDENTIALS", str(target))
+        # Force Vertex AI path in google-genai SDK
+        os.environ.setdefault("GOOGLE_GENAI_USE_VERTEXAI", "true")
+    except OSError:
+        pass
+
+
+_materialize_vertex_sa()
 
 
 @dataclass(frozen=True)
