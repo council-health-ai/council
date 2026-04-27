@@ -200,6 +200,8 @@ def agent_env(name: str) -> dict[str, str]:
         "SERVICE_URL": hf_url(name),
         "MCP_URL": MCP_URL,
         "PORT": "7860",
+        "GEMINI_MODEL": "gemini-2.5-flash",
+        "CONVENER_MODEL": "gemini-2.5-flash",
         "FHIR_EXTENSION_URI": (
             "https://app.promptopinion.ai/schemas/a2a/v1/fhir-context"
         ),
