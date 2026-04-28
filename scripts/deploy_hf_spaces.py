@@ -161,11 +161,43 @@ def stage_agent(name: str, blurb: str) -> Path:
     return target
 
 
+VERTEX_SA_KEY_PATH = Path.home() / ".config/gcloud/keys/council-vertex.json"
+VERTEX_PROJECT = "firm-plexus-363809"
+VERTEX_LOCATION = "us-central1"
+
+
+def _load_vertex_sa() -> str:
+    if not VERTEX_SA_KEY_PATH.exists():
+        sys.exit(
+            f"Vertex SA key not found at {VERTEX_SA_KEY_PATH}. "
+            "Without it agents fall back to AI Studio (depleted prepayment). "
+            "Recreate per memory project_council_vertex_setup.md."
+        )
+    return VERTEX_SA_KEY_PATH.read_text()
+
+
 def common_secrets(env: dict[str, str]) -> dict[str, str]:
+    """Secrets shared across MCP and all 9 agent Spaces.
+
+    Important: GEMINI_API_KEY is intentionally OMITTED. With both GEMINI_API_KEY
+    and the Vertex env present, google-genai prefers the API key and routes to
+    AI Studio — which uses a separate billing pool that the user has depleted.
+    Setting only the Vertex bundle (SA JSON + project + location +
+    USE_VERTEXAI=true) forces requests to draw from the $300 GCP trial.
+    """
     return {
-        "GEMINI_API_KEY": env["GEMINI_API_KEY"],
+        "GCP_SA_KEY_JSON": _load_vertex_sa(),
         "SUPABASE_URL": env["SUPABASE_URL"],
         "SUPABASE_SERVICE_ROLE_KEY": env["SUPABASE_SERVICE_ROLE_KEY"],
+    }
+
+
+def common_vars() -> dict[str, str]:
+    """Non-secret env vars wired to every Space — declares the Vertex routing."""
+    return {
+        "GOOGLE_CLOUD_PROJECT": VERTEX_PROJECT,
+        "GOOGLE_CLOUD_LOCATION": VERTEX_LOCATION,
+        "GOOGLE_GENAI_USE_VERTEXAI": "true",
     }
 
 
@@ -214,6 +246,7 @@ def agent_env(name: str) -> dict[str, str]:
         "PEDIATRICS_AGENT_URL": PEER_URLS["pediatrics"],
         "PSYCHIATRY_AGENT_URL": PEER_URLS["psychiatry"],
         "ANESTHESIA_AGENT_URL": PEER_URLS["anesthesia"],
+        **common_vars(),
     }
 
 
@@ -267,6 +300,7 @@ def main() -> int:
             "GEMINI_MODEL": "gemini-2.5-flash",
             "SHARP_ENFORCE_403": "true",
             "SENTRY_ENVIRONMENT": "production",
+            **common_vars(),
         },
     )
 
