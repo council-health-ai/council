@@ -114,14 +114,24 @@ async def _call_one_peer(
         text, structured = _extract_view(responses)
 
         # Diagnostic: surface raw response shape + parse outcome to HF logs.
-        # Without this we have no visibility into why a SpecialtyView fails to
-        # parse — Supabase audit is FK-gated and may also be silently dropping.
+        chunk_types = [type(r).__name__ for r in responses]
+        # Dump the first chunk to JSON so we can see the actual a2a-sdk shape
+        # — this is what tells us if our walker is finding the right keys.
+        first_chunk_dump: str | None = None
+        if responses:
+            try:
+                plain = _to_plain(responses[0])
+                first_chunk_dump = json.dumps(plain, default=str)[:800]
+            except Exception as dump_err:
+                first_chunk_dump = f"<dump failed: {dump_err}>"
         logger.info(
             "peer response parsed",
             specialty=specialty,
             url=url,
             latency_ms=latency_ms,
             response_chunks=len(responses),
+            chunk_types=chunk_types,
+            first_chunk_dump=first_chunk_dump,
             text_len=(len(text) if text else 0),
             text_preview=(text[:400] if text else None),
             structured_view_specialty=(structured.get("specialty") if isinstance(structured, dict) else None),
@@ -237,71 +247,73 @@ def _extract_view(responses: list[Any]) -> tuple[str | None, dict[str, Any] | No
     return final_text, None
 
 
-def _scan_for_structured_view(obj: Any) -> dict[str, Any] | None:
-    """Walk a streamed A2A response object looking for a SpecialtyView-shaped dict.
+def _to_plain(obj: Any) -> Any:
+    """Convert any A2A SDK / Pydantic / dataclass object to plain dict/list/scalar.
 
-    Catches ADK/A2A function_response artifacts where the MCP tool's return value
-    is carried as structured data — bypassing the LLM's paraphrase entirely.
+    a2a-sdk uses Pydantic models with discriminated unions (Part.root → TextPart),
+    so attribute-walking misses field paths. model_dump() flattens everything.
     """
+    if obj is None or isinstance(obj, (str, int, float, bool)):
+        return obj
     if isinstance(obj, dict):
-        if _looks_like_view(obj):
-            return obj  # type: ignore[return-value]
-        for v in obj.values():
-            inner = _scan_for_structured_view(v)
+        return {k: _to_plain(v) for k, v in obj.items()}
+    if isinstance(obj, (list, tuple)):
+        return [_to_plain(x) for x in obj]
+    if hasattr(obj, "model_dump"):
+        try:
+            return obj.model_dump(mode="json", exclude_none=True)
+        except Exception:
+            pass
+    if hasattr(obj, "__dict__"):
+        return {k: _to_plain(v) for k, v in vars(obj).items() if not k.startswith("_")}
+    return str(obj)
+
+
+def _scan_for_structured_view(obj: Any) -> dict[str, Any] | None:
+    """Walk a (now-plain) A2A response looking for a SpecialtyView-shaped dict."""
+    plain = _to_plain(obj)
+    return _walk_for_view(plain)
+
+
+def _walk_for_view(node: Any) -> dict[str, Any] | None:
+    if isinstance(node, dict):
+        if _looks_like_view(node):
+            return node  # type: ignore[return-value]
+        for v in node.values():
+            inner = _walk_for_view(v)
             if inner is not None:
                 return inner
-    elif isinstance(obj, list):
-        for item in obj:
-            inner = _scan_for_structured_view(item)
+    elif isinstance(node, list):
+        for item in node:
+            inner = _walk_for_view(item)
             if inner is not None:
                 return inner
-    elif hasattr(obj, "__dict__") or hasattr(obj, "model_dump"):
-        # Pydantic / dataclass / regular object — peek into common payload attrs
-        for attr in (
-            "response",
-            "result",
-            "output",
-            "content",
-            "data",
-            "artifact",
-            "artifacts",
-            "parts",
-            "function_response",
-            "tool_response",
-        ):
-            value = getattr(obj, attr, None)
-            if value is not None:
-                inner = _scan_for_structured_view(value)
-                if inner is not None:
-                    return inner
     return None
 
 
 def _scan_for_text(obj: Any) -> str | None:
-    if isinstance(obj, str):
-        return obj
-    if isinstance(obj, dict):
-        # Common shapes: {"text": "..."} or {"parts": [{"text": "..."}, ...]}
-        if isinstance(obj.get("text"), str):
-            return obj["text"]
-        for v in obj.values():
-            inner = _scan_for_text(v)
-            if inner:
-                return inner
-    elif isinstance(obj, list):
-        for item in obj:
-            inner = _scan_for_text(item)
-            if inner:
-                return inner
-    else:
-        # Pydantic or dataclass-ish — try attribute scan
-        for attr in ("text", "parts", "result", "artifact", "content"):
-            value = getattr(obj, attr, None)
-            if value is not None:
-                inner = _scan_for_text(value)
-                if inner:
-                    return inner
-    return None
+    """Find the agent's text response anywhere in a (now-plain) A2A payload.
+
+    Walks the dict tree looking for `{"text": "..."}` or `{"kind":"text","text":...}`.
+    Picks the LAST text found so we get the agent's final response, not an early
+    intermediate event.
+    """
+    plain = _to_plain(obj)
+    found: list[str] = []
+    _walk_for_text(plain, found)
+    return found[-1] if found else None
+
+
+def _walk_for_text(node: Any, found: list[str]) -> None:
+    if isinstance(node, dict):
+        text_val = node.get("text")
+        if isinstance(text_val, str) and text_val.strip():
+            found.append(text_val)
+        for v in node.values():
+            _walk_for_text(v, found)
+    elif isinstance(node, list):
+        for item in node:
+            _walk_for_text(item, found)
 
 
 async def fan_out(
