@@ -62,6 +62,16 @@ class Settings:
         )
     )
 
+    # Public URL of the convene-ui static viewer (Supabase Realtime live deliberation).
+    # The Convener attaches `live_url={convene_ui_url}/?id={convening_id}` to every
+    # ConcordantPlan response so chat surfaces (PO General Chat, Launchpad, …) can
+    # link out to the rich rendering even when their own response window times out.
+    convene_ui_url: str = field(
+        default_factory=lambda: os.getenv(
+            "CONVENE_UI_URL", "https://council-health-ai-convene-ui.hf.space"
+        )
+    )
+
     # FHIR extension URI used in A2A message metadata to encode SHARP context
     fhir_extension_uri: str = field(
         default_factory=lambda: os.getenv(

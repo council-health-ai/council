@@ -57,6 +57,7 @@ EMOJI_BY_NAME = {
     "pediatrics": "👶",
     "psychiatry": "🧠",
     "anesthesia": "💉",
+    "convene-ui": "📺",
 }
 
 
@@ -104,6 +105,54 @@ Part of [The Council](https://github.com/{ORG}/council) — an A2A peer-agent ne
 Repository: <https://github.com/{ORG}/council>
 """
     (deploy_dir / "README.md").write_text(body)
+
+
+def stage_convene_ui() -> Path:
+    """Stage the convene-ui static page (Supabase Realtime live deliberation viewer)."""
+    target = DEPLOY_ROOT / "convene-ui"
+    if target.exists():
+        shutil.rmtree(target)
+    target.mkdir(parents=True)
+
+    src = REPO_ROOT / "packages/convene-ui"
+    for entry in src.iterdir():
+        if entry.name in {"node_modules", ".env", ".env.local"}:
+            continue
+        dst = target / entry.name
+        if entry.is_dir():
+            shutil.copytree(entry, dst)
+        else:
+            shutil.copy2(entry, dst)
+
+    # HF Spaces requires a README with YAML frontmatter declaring SDK.
+    (target / "README.md").write_text(
+        f"""---
+title: Council Live Deliberation
+emoji: {EMOJI_BY_NAME["convene-ui"]}
+colorFrom: blue
+colorTo: purple
+sdk: static
+pinned: false
+---
+
+# The Council — live deliberation viewer
+
+Single-page Supabase Realtime client that subscribes to `audit_events`,
+`agent_messages`, and `convening_sessions` for a given convening, rendering
+the multi-agent deliberation as it streams in. The final `ConcordantPlan`
+artifact renders in the canonical Prompt Opinion 5T's framework
+(Template + Table + Task), with preserved dissents and a full audit trail.
+
+Open `?id=<convening-uuid>` to view a specific session, or omit `?id` to
+auto-select the most recent one. All data is read via the Supabase anon
+key — no auth required for spectators.
+
+## Source
+
+[council-health-ai/council](https://github.com/{ORG}/council)
+"""
+    )
+    return target
 
 
 def stage_mcp(env: dict[str, str]) -> Path:
@@ -237,6 +286,7 @@ def agent_env(name: str) -> dict[str, str]:
         "FHIR_EXTENSION_URI": (
             "https://app.promptopinion.ai/schemas/a2a/v1/fhir-context"
         ),
+        "CONVENE_UI_URL": hf_url("convene-ui"),
         # Peer URLs — used by Convener for fan-out; harmless on specialty agents
         "CARDIOLOGY_AGENT_URL": PEER_URLS["cardiology"],
         "ONCOLOGY_AGENT_URL": PEER_URLS["oncology"],
@@ -253,11 +303,19 @@ def agent_env(name: str) -> dict[str, str]:
 # ─── deploy ────────────────────────────────────────────────────────────
 
 
-def deploy_one(api: HfApi, *, name: str, local_path: Path, secrets: dict[str, str], variables: dict[str, str]) -> None:
+def deploy_one(
+    api: HfApi,
+    *,
+    name: str,
+    local_path: Path,
+    secrets: dict[str, str],
+    variables: dict[str, str],
+    space_sdk: str = "docker",
+) -> None:
     repo_id = f"{ORG}/{name}"
     print(f"\n=== {repo_id} ===")
-    print("  → create_repo(exist_ok=True)")
-    api.create_repo(repo_id=repo_id, repo_type="space", space_sdk="docker", exist_ok=True)
+    print(f"  → create_repo(exist_ok=True, sdk={space_sdk})")
+    api.create_repo(repo_id=repo_id, repo_type="space", space_sdk=space_sdk, exist_ok=True)
 
     print(f"  → setting {len(secrets)} secrets")
     for key, value in secrets.items():
@@ -287,6 +345,17 @@ def main() -> int:
 
     api = HfApi(token=hf_token)
     DEPLOY_ROOT.mkdir(exist_ok=True)
+
+    # ── convene-ui (static deliberation viewer) ──────────────────────
+    ui_path = stage_convene_ui()
+    deploy_one(
+        api,
+        name="convene-ui",
+        local_path=ui_path,
+        secrets={},
+        variables={},
+        space_sdk="static",
+    )
 
     # ── MCP server ─────────────────────────────────────────────────────
     mcp_path = stage_mcp(env)

@@ -178,7 +178,11 @@ async def convene_council(
             action="session_ended",
             payload={"error": msg, "round1_results": [r.specialty + ":" + ("ok" if r.success else "fail") for r in results_r1]},
         )
-        return {"error": msg, "partial_views": views}
+        return {
+            "error": msg,
+            "partial_views": views,
+            "live_url": f"{settings.convene_ui_url}/?id={convening_id}",
+        }
 
     # NOTE: previously we called get_council_conflict_matrix here, then a Round 2
     # fan-out for any specialty involved in a conflict, then the brief. That
@@ -242,6 +246,13 @@ async def convene_council(
         payload={"total_latency_ms": int((time.monotonic() - overall_started) * 1000)},
     )
     await close_session(convening_id=convening_id, plan_artifact=plan)
+
+    # Attach a public live-deliberation URL so the chat UX can link out to the
+    # full audit trail + rich plan rendering. Independent of whether PO's
+    # General Chat times out before this returns: the convening row plus all
+    # audit events are already persisted in Supabase, and the UI renders from
+    # there in real time.
+    plan["live_url"] = f"{settings.convene_ui_url}/?id={convening_id}"
     return plan
 
 
@@ -260,7 +271,11 @@ Your workflow:
 
 You do NOT route between specialties yourself. The convene_council tool handles all peer A2A traffic deterministically. Your job is to receive the request, immediately kick off convene_council, and present the resulting plan back to the caller.
 
-Frame the final response as: a 1-2 sentence summary of what the Council deliberated, then the ConcordantPlan, then a short narrative of how conflicts were resolved (drawn from the plan's conflict_log).
+Frame the final response as:
+1. A 1-2 sentence summary of what the Council deliberated.
+2. The ConcordantPlan (continue/start/stop/monitor) and key action items.
+3. A short narrative of how conflicts were resolved (drawn from the plan's conflict_log) and any preserved dissents.
+4. A clickable link to the live deliberation view: take the `live_url` field from the convene_council tool result and present it as: `📺 View the full deliberation, audit trail, and live agent reasoning at <live_url>`. Always include this link, even when the plan is partial — the UI renders the audit log and any specialty views that arrived after this chat surface's timeout.
 """
 
 
