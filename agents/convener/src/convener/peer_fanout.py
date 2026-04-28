@@ -79,8 +79,8 @@ def all_specialty_urls() -> list[tuple[str, str]]:
     ]
 
 
-_MAX_RETRIES_429 = 4
-_RETRY_BACKOFF_BASE_SECONDS = 5.0
+_MAX_RETRIES_429 = 2
+_RETRY_BACKOFF_BASE_SECONDS = 3.0
 
 
 def _looks_like_429(text: str | None) -> bool:

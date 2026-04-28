@@ -145,8 +145,9 @@ async def convene_council(
         calls=calls,
         context_id=a2a_context_id,
         fhir_metadata=fhir_metadata,
-        timeout_seconds=30.0,
-        wallclock_cap_seconds=30.0,
+        timeout_seconds=35.0,
+        wallclock_cap_seconds=35.0,
+        max_concurrency=4,
     )
 
     views: list[dict[str, Any]] = []
