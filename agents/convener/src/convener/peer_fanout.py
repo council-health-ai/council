@@ -353,17 +353,17 @@ async def fan_out(
     fhir_metadata: dict[str, Any] | None,
     api_key: str | None = None,
     timeout_seconds: float = 90.0,
-    max_concurrency: int = 8,
+    max_concurrency: int = 4,
 ) -> list[PeerResult]:
     """Send the same/different prompt to multiple peers in parallel. Each peer's url is hit
     via its A2A AgentCard. Returns one PeerResult per call (success or error).
 
-    `max_concurrency` defaults to 8 — i.e. fully parallel for the standard
-    Round 1 fan-out. Vertex AI's 60 RPM per-project ceiling for gemini-2.5-flash
-    handles an 8-peer burst cleanly. The earlier 429s were AI Studio prepayment
-    depletion, not Vertex rate-limiting; once GCP_SA_KEY_JSON wires the Spaces
-    to the $300 trial pool, we can burst freely. Per-peer retries in
-    _call_one_peer cover any transient 429s.
+    `max_concurrency` defaults to 4 — Vertex on a trial-credit project enforces
+    a tighter RPM ceiling than the documented 60 RPM, and bursting 8 in <1s
+    consistently 429s ~half of them. Concurrency=4 leaves quota headroom for
+    the immediately-following concordance_brief MCP call (which is also a
+    Gemini hop) without pushing the rolling-minute window over the cliff.
+    Per-peer retries in _call_one_peer cover any remaining 429s.
     """
     api_key = api_key or settings.peer_api_key
     headers = {"X-API-Key": api_key} if api_key else {}
