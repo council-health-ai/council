@@ -146,12 +146,19 @@ async def convene_council(
     views: list[dict[str, Any]] = []
     for r in results_r1:
         if r.success and r.structured_view:
-            views.append(r.structured_view)
+            # Force-normalize patient_id back to the canonical value. LLMs
+            # occasionally hallucinate single-digit transpositions in long
+            # UUIDs (live-observed: 1c237c73-0152-4250-... became -4220-),
+            # which the conflict-matrix safety check then rejects as
+            # "views span multiple patients". The patient_id is set by the
+            # caller, not the LLM, so we own it.
+            view = {**r.structured_view, "patient_id": patient_id}
+            views.append(view)
             await record_agent_message(
                 convening_id=convening_id,
                 role=r.specialty,
                 direction="inbound",
-                content=r.structured_view,
+                content=view,
                 round_id=1,
             )
     if len(views) < 2:
