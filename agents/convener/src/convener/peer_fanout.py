@@ -112,6 +112,22 @@ async def _call_one_peer(
         latency_ms = int((time.monotonic() - started) * 1000)
 
         text, structured = _extract_view(responses)
+
+        # Diagnostic: surface raw response shape + parse outcome to HF logs.
+        # Without this we have no visibility into why a SpecialtyView fails to
+        # parse — Supabase audit is FK-gated and may also be silently dropping.
+        logger.info(
+            "peer response parsed",
+            specialty=specialty,
+            url=url,
+            latency_ms=latency_ms,
+            response_chunks=len(responses),
+            text_len=(len(text) if text else 0),
+            text_preview=(text[:400] if text else None),
+            structured_view_specialty=(structured.get("specialty") if isinstance(structured, dict) else None),
+            structured_view_keys=(sorted(structured.keys()) if isinstance(structured, dict) else None),
+            view_extracted=structured is not None,
+        )
         return PeerResult(
             specialty=specialty,
             url=url,

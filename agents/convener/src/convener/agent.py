@@ -22,7 +22,9 @@ from typing import Any
 import structlog
 from council_shared import (
     call_mcp_tool,
+    close_session,
     extract_fhir_context,
+    open_session,
     record_agent_message,
     record_audit_event,
     record_tool_call,
@@ -78,9 +80,8 @@ async def convene_council(
     state = tool_context.state
     fhir_url = state.get("fhir_url", "")
     fhir_token = state.get("fhir_token", "")
-    convening_id = state.get("convening_id") or uuid.uuid4().hex
-    state["convening_id"] = convening_id
-    a2a_context_id = state.get("context_id") or convening_id
+    a2a_context_id = state.get("context_id") or uuid.uuid4().hex
+    workspace_id = state.get("workspace_id") or "po-default"
 
     # Default patient_id from FHIR context (the platform attaches it automatically)
     if not patient_id:
@@ -94,6 +95,19 @@ async def convene_council(
     # auth error if the workspace FHIR endpoint requires a token.
     if not fhir_url:
         return {"error": "FHIR URL not present in tool_context.state"}
+
+    # Open a convening_sessions row first — every other audit table FKs to it.
+    # If Supabase isn't configured, open_session returns None and we fall back
+    # to a synthetic id so the rest of the deliberation still runs.
+    convening_id = state.get("convening_id") or await open_session(
+        a2a_context_id=a2a_context_id,
+        workspace_id=workspace_id,
+        patient_id=patient_id,
+    )
+    if not convening_id:
+        convening_id = uuid.uuid4().hex
+        logger.warning("supabase open_session unavailable; running with synthetic convening_id", convening_id=convening_id)
+    state["convening_id"] = convening_id
 
     overall_started = time.monotonic()
 
@@ -250,6 +264,7 @@ async def convene_council(
         action="session_ended",
         payload={"total_latency_ms": int((time.monotonic() - overall_started) * 1000)},
     )
+    await close_session(convening_id=convening_id, plan_artifact=plan)
     return plan
 
 
