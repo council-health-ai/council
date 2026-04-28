@@ -201,29 +201,55 @@ async def convene_council(
 
     # ── Concordance brief synthesis ─────────────────────────────────────
     cb_started = time.monotonic()
-    plan = await call_mcp_tool(
-        tool_name="get_concordance_brief",
-        arguments={
-            "views": views,
-            # Synthesize conflicts inline from views (skipped the separate
-            # MCP conflict_matrix call to fit inside PO's 60s ceiling).
-            "conflicts": {
-                "patient_id": patient_id,
-                "specialties": [v.get("specialty") for v in views],
-                "conflicts": [],
-                "agreements": [],
-                "abstentions": [],
+    try:
+        plan = await call_mcp_tool(
+            tool_name="get_concordance_brief",
+            arguments={
+                "views": views,
+                # Synthesize conflicts inline from views (skipped the separate
+                # MCP conflict_matrix call to fit inside PO's 60s ceiling).
+                "conflicts": {
+                    "patient_id": patient_id,
+                    "specialties": [v.get("specialty") for v in views],
+                    "conflicts": [],
+                    "agreements": [],
+                    "abstentions": [],
+                },
+                "total_messages": len(views),
+                "total_rounds": 1,
             },
-            "total_messages": len(views),
-            "total_rounds": 1,
-        },
-        fhir_url=fhir_url,
-        fhir_token=fhir_token,
-        patient_id=patient_id,
-        convening_id=convening_id,
-        specialty="convener",
-        round_id=1,
-    )
+            fhir_url=fhir_url,
+            fhir_token=fhir_token,
+            patient_id=patient_id,
+            convening_id=convening_id,
+            specialty="convener",
+            round_id=1,
+        )
+    except Exception as brief_err:
+        # Brief synthesis failed (typically Vertex 429 on a hot trial-credit
+        # window). Don't crash the deliberation — return the Round 1 views as
+        # a degraded plan so the chat surface and convene-ui still have
+        # something to show. The audit trail in Supabase is intact.
+        msg = str(brief_err)
+        logger.warning("brief synthesis failed; returning Round-1 partial", err=msg)
+        await record_audit_event(
+            convening_id=convening_id,
+            actor="agent/convener",
+            action="session_ended",
+            payload={"error": f"brief_failed: {msg[:300]}", "n_views": len(views)},
+        )
+        await close_session(convening_id=convening_id)
+        return {
+            "status": "round1_only",
+            "message": (
+                f"Round 1 completed: {len(views)} specialty views captured. "
+                f"Concordance brief synthesis was unavailable (rate-limited by upstream model). "
+                f"Full views and audit trail are preserved at the live URL."
+            ),
+            "specialties_consulted": [v.get("specialty") for v in views],
+            "views": views,
+            "live_url": f"{settings.convene_ui_url}/?id={convening_id}",
+        }
     await record_tool_call(
         convening_id=convening_id,
         tool_name="get_concordance_brief",

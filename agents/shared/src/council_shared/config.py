@@ -68,7 +68,7 @@ class Settings:
     # link out to the rich rendering even when their own response window times out.
     convene_ui_url: str = field(
         default_factory=lambda: os.getenv(
-            "CONVENE_UI_URL", "https://council-health-ai-convene-ui.hf.space"
+            "CONVENE_UI_URL", "https://council-health-ai-convene-ui.static.hf.space"
         )
     )
 

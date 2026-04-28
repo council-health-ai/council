@@ -286,7 +286,7 @@ def agent_env(name: str) -> dict[str, str]:
         "FHIR_EXTENSION_URI": (
             "https://app.promptopinion.ai/schemas/a2a/v1/fhir-context"
         ),
-        "CONVENE_UI_URL": hf_url("convene-ui"),
+        "CONVENE_UI_URL": "https://council-health-ai-convene-ui.static.hf.space",
         # Peer URLs — used by Convener for fan-out; harmless on specialty agents
         "CARDIOLOGY_AGENT_URL": PEER_URLS["cardiology"],
         "ONCOLOGY_AGENT_URL": PEER_URLS["oncology"],
