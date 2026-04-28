@@ -14,6 +14,7 @@ differentiator: peer A2A with deterministic fan-out, not orchestrator-with-Gemin
 
 from __future__ import annotations
 
+import asyncio
 import json
 import time
 import uuid
@@ -186,6 +187,13 @@ async def convene_council(
     # we synthesise straight from Round 1. The conflict_log inside the
     # ConcordantPlan still reflects detected disagreements.
     conflicts: list[dict[str, Any]] = []
+
+    # Round 1 just hammered Vertex with up to 8 Gemini calls in a ~30s window.
+    # On a trial-credit project the rolling-minute RPM ceiling is hot enough
+    # that the brief Gemini call almost always 429s on first try. A small
+    # cooldown lets the window drain so the brief lands clean — saves ~3-5s
+    # of retry-backoff wallclock on the critical path.
+    await asyncio.sleep(4)
 
     # ── Concordance brief synthesis ─────────────────────────────────────
     cb_started = time.monotonic()

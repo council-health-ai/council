@@ -55,8 +55,8 @@ function isRateLimit(err: unknown): boolean {
   return message.includes("429") || message.includes("resource_exhausted") || message.includes("rate limit");
 }
 
-const MAX_429_RETRIES = 3;
-const BACKOFF_BASE_MS = 4000;
+const MAX_429_RETRIES = 2;
+const BACKOFF_BASE_MS = 1500;
 
 async function sleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
