@@ -18,7 +18,6 @@
     --sage-700: #4a8568;
     --sage-500: #6fa882;
     --sage-100: #e6efe9;
-
     --paper:    #f8f6f1;
     --paper-2:  #ffffff;
     --ink:      #14283d;
@@ -29,613 +28,235 @@
     --warn:     #b07a1a;
     --bad:      #b04545;
     --good:     #4a8568;
-
     --serif: "Fraunces", "Iowan Old Style", Georgia, serif;
     --sans:  "Inter", -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
     --mono:  "JetBrains Mono", ui-monospace, "SF Mono", monospace;
-
     --radius: 4px;
-    --shadow-card: 0 1px 0 rgba(13, 36, 56, 0.04), 0 0 0 1px var(--rule);
   }
 
-  /* ── Reset + base ──────────────────────────────────────────────────── */
   *, *::before, *::after { box-sizing: border-box; }
-  html, body {
-    margin: 0;
-    background: var(--paper);
-    color: var(--ink);
-    font: 15px/1.55 var(--sans);
-    -webkit-font-smoothing: antialiased;
-    text-rendering: optimizeLegibility;
-  }
+  html, body { margin: 0; height: 100%; background: var(--paper); color: var(--ink); font: 15px/1.55 var(--sans); -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
   a { color: var(--navy-500); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 2px; }
   a:hover { color: var(--navy-700); }
-  h1, h2, h3 { font-family: var(--serif); font-weight: 500; letter-spacing: -0.01em; color: var(--navy-900); }
-  h1 { font-size: 32px; line-height: 1.15; margin: 0; }
-  h2 { font-size: 22px; line-height: 1.2; margin: 0 0 18px; font-weight: 600; }
-  h3 { font-size: 16px; line-height: 1.3; margin: 0 0 8px; font-weight: 600; }
-  p  { margin: 0 0 12px; }
-
+  h1, h2, h3, h4 { font-family: var(--serif); font-weight: 500; letter-spacing: -0.01em; color: var(--navy-900); margin: 0; }
+  h1 { font-size: 32px; line-height: 1.15; }
+  h2 { font-size: 22px; line-height: 1.2; font-weight: 600; }
+  h3 { font-size: 16px; line-height: 1.3; font-weight: 600; }
+  h4 { font-size: 14px; }
+  p { margin: 0; }
+  ul { margin: 0; padding-left: 18px; }
   .mono { font-family: var(--mono); font-size: 12px; letter-spacing: 0.02em; }
 
+  /* ── App shell ─────────────────────────────────────────────────────── */
+  .app {
+    min-height: 100vh;
+    display: grid;
+    grid-template-rows: auto auto 1fr;
+  }
+
   /* ── Top bar ───────────────────────────────────────────────────────── */
-  .topbar {
-    background: var(--paper-2);
-    border-bottom: 1px solid var(--rule);
-  }
-  .topbar-inner {
-    max-width: 1240px;
-    margin: 0 auto;
-    padding: 18px 32px;
-    display: flex;
-    align-items: center;
-    gap: 18px;
-  }
-  .brand {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-  }
-  .brand img {
-    width: 44px;
-    height: 44px;
-    object-fit: contain;
-  }
-  .brand-text {
-    line-height: 1.1;
-  }
-  .brand-text .name {
-    font-family: var(--serif);
-    font-size: 19px;
-    font-weight: 600;
-    color: var(--navy-900);
-    letter-spacing: 0.02em;
-  }
-  .brand-text .tag {
-    font-size: 11px;
-    color: var(--sage-700);
-    text-transform: uppercase;
-    letter-spacing: 0.18em;
-    margin-top: 2px;
-    font-weight: 500;
-  }
+  .topbar { background: var(--paper-2); border-bottom: 1px solid var(--rule); position: sticky; top: 0; z-index: 50; }
+  .topbar-inner { max-width: 1320px; margin: 0 auto; padding: 16px 32px; display: flex; align-items: center; gap: 18px; }
+  .brand { display: flex; align-items: center; gap: 14px; }
+  .brand img { width: 40px; height: 40px; object-fit: contain; }
+  .brand-text .name { font-family: var(--serif); font-size: 18px; font-weight: 600; color: var(--navy-900); letter-spacing: 0.02em; line-height: 1.1; }
+  .brand-text .tag { font-size: 10px; color: var(--sage-700); text-transform: uppercase; letter-spacing: 0.18em; margin-top: 3px; font-weight: 600; }
   .topbar-spacer { flex: 1; }
-  .session-meta {
-    text-align: right;
-    color: var(--ink-3);
-    font-size: 12px;
-    line-height: 1.4;
-  }
-  .session-meta .id {
-    font-family: var(--mono);
-    color: var(--ink-2);
-  }
-  .status-pill {
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 4px 10px;
-    border-radius: 100px;
-    font-size: 11px;
-    font-weight: 600;
-    letter-spacing: 0.04em;
-    text-transform: uppercase;
-    border: 1px solid var(--rule);
-  }
-  .status-pill .dot {
-    width: 6px;
-    height: 6px;
-    border-radius: 50%;
-    background: var(--ink-3);
-  }
+  .session-summary { display: flex; align-items: center; gap: 14px; font-size: 12px; }
+  .session-summary .ref { font-family: var(--mono); color: var(--ink-3); }
+  .status-pill { display: inline-flex; align-items: center; gap: 6px; padding: 4px 10px; border-radius: 100px; font-size: 11px; font-weight: 600; letter-spacing: 0.06em; text-transform: uppercase; border: 1px solid var(--rule); background: var(--paper-2); }
+  .status-pill .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--ink-3); }
   .status-pill.active { color: var(--sage-700); border-color: rgba(111, 168, 130, 0.35); background: var(--sage-100); }
-  .status-pill.active .dot { background: var(--sage-500); animation: pulse-dot 2s ease-in-out infinite; }
+  .status-pill.active .dot { background: var(--sage-500); animation: pulse-dot 1.8s ease-in-out infinite; }
   .status-pill.completed { color: var(--navy-700); border-color: rgba(42, 90, 124, 0.2); background: var(--navy-100); }
   .status-pill.completed .dot { background: var(--navy-500); }
+  .status-pill.failed { color: var(--bad); border-color: rgba(176, 69, 69, 0.25); background: rgba(176, 69, 69, 0.06); }
+  .status-pill.failed .dot { background: var(--bad); }
+  @keyframes pulse-dot { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
 
-  @keyframes pulse-dot {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.35; }
-  }
+  /* ── Page title strip (between topbar and tabs) ────────────────────── */
+  .title-strip { background: var(--paper); border-bottom: 1px solid var(--rule); }
+  .title-inner { max-width: 1320px; margin: 0 auto; padding: 28px 32px 0; }
+  .eyebrow { font-size: 10px; text-transform: uppercase; letter-spacing: 0.22em; color: var(--sage-700); font-weight: 600; margin-bottom: 8px; }
+  .title-strip h1 { font-size: 28px; }
+  .title-strip h1 .accent { color: var(--sage-700); font-style: italic; font-weight: 400; }
+  .title-strip .subtitle { margin-top: 8px; color: var(--ink-2); font-size: 14px; max-width: 760px; }
 
-  /* ── Page header card ──────────────────────────────────────────────── */
-  .page-header {
-    max-width: 1240px;
-    margin: 0 auto;
-    padding: 36px 32px 24px;
+  /* ── Tab bar ───────────────────────────────────────────────────────── */
+  .tabs { display: flex; gap: 0; max-width: 1320px; margin: 24px auto 0; padding: 0 32px; border-bottom: 1px solid var(--rule); }
+  .tab {
+    background: none; border: none; padding: 12px 18px 14px; font: inherit; font-size: 14px; color: var(--ink-2);
+    cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; font-weight: 500; letter-spacing: -0.005em;
+    transition: color 0.15s ease, border-color 0.15s ease;
+    display: inline-flex; align-items: center; gap: 8px;
   }
-  .eyebrow {
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.2em;
-    color: var(--sage-700);
-    font-weight: 600;
-    margin-bottom: 10px;
-  }
-  .page-header h1 .accent {
-    color: var(--sage-700);
-    font-style: italic;
-    font-weight: 400;
-  }
-  .page-header .subtitle {
-    margin-top: 12px;
-    color: var(--ink-2);
-    font-size: 16px;
-    max-width: 720px;
-  }
+  .tab:hover { color: var(--navy-700); }
+  .tab.active { color: var(--navy-900); border-bottom-color: var(--sage-500); font-weight: 600; }
+  .tab .count { font-size: 11px; padding: 2px 7px; background: var(--rule-2); border-radius: 100px; color: var(--ink-2); font-weight: 500; font-family: var(--mono); }
+  .tab.active .count { background: var(--sage-100); color: var(--sage-700); }
 
-  /* ── Layout ─────────────────────────────────────────────────────────── */
-  main {
-    max-width: 1240px;
-    margin: 0 auto;
-    padding: 0 32px 80px;
-    display: grid;
-    grid-template-columns: 360px 1fr;
-    gap: 32px;
-    align-items: start;
-  }
-  @media (max-width: 960px) {
-    main { grid-template-columns: 1fr; }
-  }
+  /* ── Main content ──────────────────────────────────────────────────── */
+  main { max-width: 1320px; margin: 0 auto; padding: 32px; width: 100%; }
+  .panel { display: none; animation: fade-in 0.18s ease; }
+  .panel.active { display: block; }
+  @keyframes fade-in { from { opacity: 0; transform: translateY(2px); } to { opacity: 1; transform: translateY(0); } }
 
-  .card {
-    background: var(--paper-2);
-    border: 1px solid var(--rule);
-    border-radius: var(--radius);
-    padding: 24px;
-  }
-  .card .label {
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.16em;
-    color: var(--ink-3);
-    font-weight: 600;
-    margin-bottom: 14px;
-  }
+  /* ── Common building blocks ───────────────────────────────────────── */
+  .card { background: var(--paper-2); border: 1px solid var(--rule); border-radius: var(--radius); padding: 22px 24px; }
+  .card-tight { padding: 18px 20px; }
+  .label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.18em; color: var(--ink-3); font-weight: 600; }
 
-  /* ── Specialty roster ──────────────────────────────────────────────── */
-  .roster { display: flex; flex-direction: column; gap: 0; }
-  .roster-row {
-    display: flex;
-    align-items: center;
-    gap: 12px;
-    padding: 11px 2px;
-    border-bottom: 1px solid var(--rule-2);
-    font-size: 14px;
-  }
-  .roster-row:last-child { border-bottom: none; }
-  .roster-row .indicator {
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: var(--ink-3);
-    opacity: 0.4;
-    flex-shrink: 0;
-  }
-  .roster-row.idle    .indicator { background: var(--ink-3); opacity: 0.25; }
-  .roster-row.thinking .indicator {
-    background: var(--warn);
-    opacity: 1;
-    box-shadow: 0 0 0 0 rgba(176, 122, 26, 0.6);
-    animation: pulse-ring 1.6s ease-in-out infinite;
-  }
-  .roster-row.done .indicator { background: var(--sage-500); opacity: 1; }
-  .roster-row.error .indicator { background: var(--bad); opacity: 1; }
+  .grid-2 { display: grid; grid-template-columns: 1.4fr 1fr; gap: 24px; align-items: start; }
+  .grid-2-eq { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  @media (max-width: 980px) { .grid-2, .grid-2-eq { grid-template-columns: 1fr; } }
 
-  @keyframes pulse-ring {
-    0% { box-shadow: 0 0 0 0 rgba(176, 122, 26, 0.55); }
-    70% { box-shadow: 0 0 0 8px rgba(176, 122, 26, 0); }
-    100% { box-shadow: 0 0 0 0 rgba(176, 122, 26, 0); }
+  /* ── Plan tab ──────────────────────────────────────────────────────── */
+  .doc-meta {
+    display: grid; grid-template-columns: repeat(4, 1fr); gap: 0;
+    background: var(--paper-2); border: 1px solid var(--rule); border-radius: var(--radius);
+    margin-bottom: 24px; overflow: hidden;
   }
-
-  .roster-row .name { flex: 1; font-weight: 500; color: var(--navy-900); letter-spacing: -0.005em; }
-  .roster-row .latency { font-family: var(--mono); font-size: 11px; color: var(--ink-3); }
-
-  /* ── Stats ─────────────────────────────────────────────────────────── */
-  .stats {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 14px 18px;
-    margin-top: 20px;
-    padding-top: 20px;
-    border-top: 1px solid var(--rule-2);
-  }
-  .stat .v {
-    font-family: var(--serif);
-    font-size: 26px;
-    font-weight: 500;
-    color: var(--navy-900);
-    line-height: 1;
-  }
-  .stat .k {
-    font-size: 11px;
-    text-transform: uppercase;
-    letter-spacing: 0.14em;
-    color: var(--ink-3);
-    margin-top: 4px;
-    font-weight: 500;
-  }
-
-  /* ── Timeline ──────────────────────────────────────────────────────── */
-  .timeline-card { padding: 24px 0; }
-  .timeline-card .label { padding: 0 24px; }
-  .timeline {
-    max-height: 420px;
-    overflow-y: auto;
-    padding: 0 24px;
-  }
-  .timeline::-webkit-scrollbar { width: 4px; }
-  .timeline::-webkit-scrollbar-thumb { background: var(--rule); border-radius: 2px; }
-  .event {
-    display: grid;
-    grid-template-columns: 56px 1fr;
-    gap: 12px;
-    padding: 10px 0;
-    border-bottom: 1px solid var(--rule-2);
-    font-size: 13px;
-    animation: slide-in 0.3s ease;
-  }
-  .event:last-child { border-bottom: none; }
-  .event .when {
-    font-family: var(--mono);
-    font-size: 11px;
-    color: var(--ink-3);
-    padding-top: 1px;
-  }
-  .event .body { color: var(--ink-2); line-height: 1.45; }
-  .event .body .actor {
-    color: var(--navy-700);
-    font-weight: 500;
-    text-transform: capitalize;
-  }
-  .event.flag { background: linear-gradient(90deg, var(--sage-100) 0%, transparent 100%); padding-left: 8px; margin-left: -8px; padding-right: 8px; margin-right: -8px; border-radius: 2px; }
-  .event.flag .body { color: var(--navy-900); font-weight: 500; }
-
-  @keyframes slide-in {
-    from { opacity: 0; transform: translateX(-3px); }
-    to { opacity: 1; transform: translateX(0); }
-  }
-
-  /* ── Plan: clinical document feel ──────────────────────────────────── */
-  .plan-doc { display: none; }
-  .plan-doc.visible { display: block; }
-  .plan-doc .doc-meta {
-    display: flex;
-    gap: 24px;
-    align-items: baseline;
-    margin-bottom: 24px;
-    padding-bottom: 20px;
-    border-bottom: 1px solid var(--rule);
-    color: var(--ink-3);
-    font-size: 12px;
-    text-transform: uppercase;
-    letter-spacing: 0.14em;
-    font-weight: 500;
-  }
-  .plan-doc .doc-meta strong { color: var(--ink); font-weight: 600; }
+  .doc-meta .cell { padding: 16px 22px; border-right: 1px solid var(--rule-2); }
+  .doc-meta .cell:last-child { border-right: none; }
+  @media (max-width: 720px) { .doc-meta { grid-template-columns: repeat(2, 1fr); } .doc-meta .cell { border-bottom: 1px solid var(--rule-2); } .doc-meta .cell:nth-last-child(-n+2) { border-bottom: none; } }
+  .doc-meta .v { font-family: var(--serif); font-size: 28px; font-weight: 500; color: var(--navy-900); line-height: 1; }
+  .doc-meta .k { font-size: 11px; text-transform: uppercase; letter-spacing: 0.14em; color: var(--ink-3); margin-top: 6px; font-weight: 500; }
 
   .doc-section { margin-bottom: 36px; }
-  .doc-section .section-eyebrow {
-    font-size: 10px;
-    text-transform: uppercase;
-    letter-spacing: 0.22em;
-    color: var(--sage-700);
-    font-weight: 600;
-    margin-bottom: 8px;
-  }
+  .doc-section .section-eyebrow { font-size: 10px; text-transform: uppercase; letter-spacing: 0.22em; color: var(--sage-700); font-weight: 600; margin-bottom: 8px; }
   .doc-section h2 { margin-bottom: 14px; }
 
-  .summary-block p:first-child {
-    font-family: var(--serif);
-    font-size: 18px;
-    line-height: 1.5;
-    color: var(--navy-900);
-    font-weight: 400;
-  }
-  .summary-block .rationale {
-    color: var(--ink-2);
-    font-size: 14px;
-    line-height: 1.6;
-  }
+  .summary-block { background: var(--paper-2); border: 1px solid var(--rule); border-radius: var(--radius); padding: 26px 30px; }
+  .summary-block .lede { font-family: var(--serif); font-size: 19px; line-height: 1.5; color: var(--navy-900); font-weight: 400; margin-bottom: 14px; }
+  .summary-block .rationale { color: var(--ink-2); font-size: 14px; line-height: 1.6; }
 
-  /* ── 5T plan grid ──────────────────────────────────────────────────── */
-  .plan-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 16px;
-  }
+  .plan-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px; }
   @media (max-width: 720px) { .plan-grid { grid-template-columns: 1fr; } }
-  .plan-quadrant {
-    background: var(--paper-2);
-    border: 1px solid var(--rule);
-    border-left: 3px solid var(--rule);
-    padding: 18px 22px;
-    border-radius: var(--radius);
-  }
+  .plan-quadrant { background: var(--paper-2); border: 1px solid var(--rule); border-left: 3px solid var(--rule); padding: 20px 24px; border-radius: var(--radius); }
   .plan-quadrant.continue { border-left-color: var(--sage-500); }
   .plan-quadrant.start    { border-left-color: var(--navy-500); }
   .plan-quadrant.stop     { border-left-color: var(--bad); }
   .plan-quadrant.monitor  { border-left-color: var(--warn); }
-  .plan-quadrant h3 {
-    font-family: var(--sans);
-    font-size: 11px;
-    font-weight: 700;
-    letter-spacing: 0.18em;
-    text-transform: uppercase;
-    color: var(--ink-3);
-  }
+  .plan-quadrant h3 { font-family: var(--sans); font-size: 11px; font-weight: 700; letter-spacing: 0.18em; text-transform: uppercase; color: var(--ink-3); margin-bottom: 10px; }
   .plan-quadrant.continue h3 { color: var(--sage-700); }
   .plan-quadrant.start    h3 { color: var(--navy-700); }
   .plan-quadrant.stop     h3 { color: var(--bad); }
   .plan-quadrant.monitor  h3 { color: var(--warn); }
-  .plan-quadrant ul { margin: 0; padding-left: 18px; }
-  .plan-quadrant li {
-    margin: 6px 0;
-    font-size: 14px;
-    color: var(--ink);
-    line-height: 1.5;
-  }
-  .plan-quadrant.empty li { color: var(--ink-3); font-style: italic; }
+  .plan-quadrant li { margin: 6px 0; font-size: 14px; line-height: 1.5; }
+  .plan-quadrant .empty { color: var(--ink-3); font-style: italic; font-size: 13px; }
+
+  .timing-notes { margin-top: 18px; padding: 14px 18px; background: var(--paper); border: 1px solid var(--rule-2); border-radius: var(--radius); font-size: 13px; color: var(--ink-2); }
+  .timing-notes h4 { font-family: var(--sans); font-size: 11px; text-transform: uppercase; letter-spacing: 0.14em; color: var(--ink-3); font-weight: 600; margin-bottom: 6px; }
+  .timing-notes li { margin: 4px 0; }
 
   /* ── Action items ──────────────────────────────────────────────────── */
-  .action {
-    background: var(--paper-2);
-    border: 1px solid var(--rule);
-    border-radius: var(--radius);
-    padding: 16px 20px;
-    margin-bottom: 10px;
-    display: grid;
-    grid-template-columns: 1fr auto;
-    gap: 14px;
-    align-items: start;
-  }
-  .action .desc {
-    font-size: 14px;
-    color: var(--ink);
-    line-height: 1.5;
-  }
-  .action .meta {
-    display: flex;
-    gap: 10px;
-    margin-top: 8px;
-    font-size: 12px;
-    color: var(--ink-3);
-  }
+  .action { background: var(--paper-2); border: 1px solid var(--rule); border-radius: var(--radius); padding: 16px 20px; margin-bottom: 10px; display: grid; grid-template-columns: 1fr auto; gap: 14px; align-items: start; }
+  .action .desc { font-size: 14px; color: var(--ink); line-height: 1.5; }
+  .action .meta { display: flex; gap: 10px; margin-top: 8px; font-size: 12px; color: var(--ink-3); flex-wrap: wrap; }
   .action .meta strong { color: var(--ink-2); font-weight: 500; }
-
-  .priority {
-    align-self: start;
-    padding: 4px 10px;
-    font-size: 10px;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.16em;
-    border-radius: 100px;
-    border: 1px solid;
-    white-space: nowrap;
-  }
+  .priority { align-self: start; padding: 4px 10px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.16em; border-radius: 100px; border: 1px solid; white-space: nowrap; }
   .priority.urgent  { background: rgba(176, 69, 69, 0.06); color: var(--bad); border-color: rgba(176, 69, 69, 0.25); }
   .priority.high    { background: rgba(176, 122, 26, 0.06); color: var(--warn); border-color: rgba(176, 122, 26, 0.25); }
   .priority.routine { background: var(--navy-100); color: var(--navy-700); border-color: rgba(42, 90, 124, 0.18); }
 
-  /* ── Conflict log ──────────────────────────────────────────────────── */
-  .conflict {
-    background: var(--paper-2);
-    border: 1px solid var(--rule);
-    border-left: 3px solid var(--warn);
-    border-radius: var(--radius);
-    padding: 18px 22px;
-    margin-bottom: 12px;
-  }
-  .conflict .topic {
-    font-weight: 600;
-    color: var(--navy-900);
-    margin-bottom: 4px;
-    font-size: 15px;
-  }
-  .conflict .method-pill {
-    display: inline-block;
-    padding: 2px 9px;
-    background: var(--sage-100);
-    color: var(--sage-700);
-    font-size: 11px;
-    text-transform: lowercase;
-    border-radius: 100px;
-    font-weight: 500;
-    letter-spacing: 0.04em;
-    margin-left: 8px;
-    border: 1px solid rgba(111, 168, 130, 0.25);
-  }
-  .conflict .method-pill.unresolved { background: rgba(176, 69, 69, 0.06); color: var(--bad); border-color: rgba(176, 69, 69, 0.25); }
-  .conflict .positions {
-    margin: 12px 0 0;
-    padding: 0;
-    list-style: none;
-  }
-  .conflict .positions li {
-    font-size: 13px;
-    color: var(--ink-2);
-    margin: 8px 0;
-    padding-left: 12px;
-    border-left: 2px solid var(--rule);
-  }
-  .conflict .positions li strong {
-    color: var(--navy-700);
-    text-transform: capitalize;
-    font-weight: 600;
-  }
-  .conflict .resolution {
-    margin-top: 14px;
-    padding-top: 12px;
-    border-top: 1px solid var(--rule-2);
-    color: var(--ink);
-    font-size: 14px;
-    line-height: 1.55;
-  }
+  /* ── Conflicts ─────────────────────────────────────────────────────── */
+  .conflict { background: var(--paper-2); border: 1px solid var(--rule); border-left: 3px solid var(--warn); border-radius: var(--radius); padding: 18px 22px; margin-bottom: 12px; }
+  .conflict .topic { font-weight: 600; color: var(--navy-900); margin-bottom: 4px; font-size: 15px; }
+  .method-pill { display: inline-block; padding: 2px 9px; background: var(--sage-100); color: var(--sage-700); font-size: 11px; text-transform: lowercase; border-radius: 100px; font-weight: 500; letter-spacing: 0.04em; margin-left: 8px; border: 1px solid rgba(111, 168, 130, 0.25); }
+  .method-pill.unresolved { background: rgba(176, 69, 69, 0.06); color: var(--bad); border-color: rgba(176, 69, 69, 0.25); }
+  .conflict .positions { margin: 12px 0 0; padding: 0; list-style: none; }
+  .conflict .positions li { font-size: 13px; color: var(--ink-2); margin: 8px 0; padding-left: 12px; border-left: 2px solid var(--rule); }
+  .conflict .positions li strong { color: var(--navy-700); text-transform: capitalize; font-weight: 600; }
+  .conflict .resolution { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--rule-2); color: var(--ink); font-size: 14px; line-height: 1.55; }
   .conflict .resolution strong { color: var(--navy-900); }
 
-  /* ── Dissent ───────────────────────────────────────────────────────── */
-  .dissent {
-    background: var(--paper-2);
-    border: 1px solid var(--rule);
-    border-left: 3px solid var(--bad);
-    border-radius: var(--radius);
-    padding: 18px 22px;
-    margin-bottom: 12px;
-  }
-  .dissent .who {
-    font-weight: 600;
-    color: var(--bad);
-    text-transform: capitalize;
-    font-size: 13px;
-    letter-spacing: 0.02em;
-    margin-bottom: 6px;
-  }
-  .dissent .position {
-    font-size: 15px;
-    color: var(--navy-900);
-    margin-bottom: 8px;
-    font-family: var(--serif);
-    font-style: italic;
-    line-height: 1.5;
-  }
-  .dissent .rationale {
-    color: var(--ink-2);
-    font-size: 13px;
-    line-height: 1.6;
-  }
+  /* ── Dissents ──────────────────────────────────────────────────────── */
+  .dissent { background: var(--paper-2); border: 1px solid var(--rule); border-left: 3px solid var(--bad); border-radius: var(--radius); padding: 18px 22px; margin-bottom: 12px; }
+  .dissent .who { font-weight: 600; color: var(--bad); text-transform: capitalize; font-size: 13px; letter-spacing: 0.02em; margin-bottom: 6px; }
+  .dissent .position { font-size: 16px; color: var(--navy-900); margin-bottom: 8px; font-family: var(--serif); font-style: italic; line-height: 1.5; }
+  .dissent .rationale { color: var(--ink-2); font-size: 13px; line-height: 1.6; }
 
-  /* ── Specialty views (consult notes) ───────────────────────────────── */
-  .views-stack { display: flex; flex-direction: column; gap: 12px; }
-  .view {
-    background: var(--paper-2);
-    border: 1px solid var(--rule);
-    border-radius: var(--radius);
-    padding: 20px 24px;
-  }
-  .view-header {
-    display: flex;
-    align-items: baseline;
-    gap: 12px;
-    margin-bottom: 10px;
-    padding-bottom: 10px;
-    border-bottom: 1px solid var(--rule-2);
-  }
-  .view-header .specialty {
-    font-family: var(--serif);
-    font-size: 17px;
-    font-weight: 600;
-    color: var(--navy-900);
-    text-transform: capitalize;
-    letter-spacing: -0.01em;
-  }
-  .view-header .role {
-    font-size: 11px;
-    color: var(--ink-3);
-    text-transform: uppercase;
-    letter-spacing: 0.16em;
-  }
-  .view .summary {
-    color: var(--ink-2);
-    font-size: 14px;
-    line-height: 1.6;
-    margin-bottom: 12px;
-  }
-  .view-grid {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 18px;
-    margin-top: 8px;
-  }
+  /* ── Deliberation tab: roster + timeline ───────────────────────────── */
+  .roster { display: flex; flex-direction: column; gap: 0; }
+  .roster-row { display: flex; align-items: center; gap: 12px; padding: 12px 0; border-bottom: 1px solid var(--rule-2); font-size: 14px; }
+  .roster-row:last-child { border-bottom: none; }
+  .roster-row .indicator { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+  .roster-row.idle    .indicator { background: var(--ink-3); opacity: 0.25; }
+  .roster-row.thinking .indicator { background: var(--warn); box-shadow: 0 0 0 0 rgba(176, 122, 26, 0.55); animation: pulse-ring 1.6s ease-in-out infinite; }
+  .roster-row.done    .indicator { background: var(--sage-500); }
+  .roster-row.error   .indicator { background: var(--bad); }
+  @keyframes pulse-ring { 0% { box-shadow: 0 0 0 0 rgba(176, 122, 26, 0.55); } 70% { box-shadow: 0 0 0 7px rgba(176, 122, 26, 0); } 100% { box-shadow: 0 0 0 0 rgba(176, 122, 26, 0); } }
+  .roster-row .meta { flex: 1; }
+  .roster-row .name { font-weight: 500; color: var(--navy-900); letter-spacing: -0.005em; }
+  .roster-row .blurb { font-size: 11px; color: var(--ink-3); margin-top: 2px; }
+  .roster-row .latency { font-family: var(--mono); font-size: 11px; color: var(--ink-3); }
+
+  .timeline { display: flex; flex-direction: column; }
+  .event { display: grid; grid-template-columns: 64px 1fr; gap: 14px; padding: 11px 0; border-bottom: 1px solid var(--rule-2); font-size: 13px; animation: slide-in 0.25s ease; }
+  .event:last-child { border-bottom: none; }
+  .event .when { font-family: var(--mono); font-size: 11px; color: var(--ink-3); padding-top: 1px; }
+  .event .body { color: var(--ink-2); line-height: 1.45; }
+  .event .body .actor { color: var(--navy-700); font-weight: 500; text-transform: capitalize; }
+  .event.flag { background: linear-gradient(90deg, var(--sage-100) 0%, transparent 100%); padding-left: 10px; margin: 0 -10px; border-radius: 2px; }
+  .event.flag .body { color: var(--navy-900); font-weight: 500; }
+  @keyframes slide-in { from { opacity: 0; transform: translateX(-3px); } to { opacity: 1; transform: translateX(0); } }
+
+  /* ── Specialty consult notes (separate tab) ────────────────────────── */
+  .views-stack { display: flex; flex-direction: column; gap: 14px; }
+  .view { background: var(--paper-2); border: 1px solid var(--rule); border-radius: var(--radius); padding: 22px 26px; }
+  .view-header { display: flex; align-items: baseline; gap: 12px; margin-bottom: 12px; padding-bottom: 12px; border-bottom: 1px solid var(--rule-2); flex-wrap: wrap; }
+  .view-header .specialty { font-family: var(--serif); font-size: 18px; font-weight: 600; color: var(--navy-900); text-transform: capitalize; letter-spacing: -0.01em; }
+  .view-header .role { font-size: 11px; color: var(--ink-3); text-transform: uppercase; letter-spacing: 0.16em; }
+  .view-header .badge { margin-left: auto; font-size: 11px; color: var(--sage-700); padding: 3px 10px; background: var(--sage-100); border-radius: 100px; border: 1px solid rgba(111, 168, 130, 0.25); font-weight: 500; }
+  .view .summary { color: var(--ink-2); font-size: 14px; line-height: 1.6; margin-bottom: 14px; }
+  .view-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 22px; }
   @media (max-width: 720px) { .view-grid { grid-template-columns: 1fr; } }
-  .view-grid .col h4 {
-    font-family: var(--sans);
-    font-size: 10px;
-    text-transform: uppercase;
-    letter-spacing: 0.18em;
-    color: var(--ink-3);
-    font-weight: 600;
-    margin: 0 0 6px;
-  }
-  .view-grid .col ul { margin: 0; padding-left: 16px; font-size: 13px; line-height: 1.5; color: var(--ink-2); }
-  .view-grid .col li { margin: 3px 0; }
+  .view-grid .col h4 { font-family: var(--sans); font-size: 10px; text-transform: uppercase; letter-spacing: 0.18em; color: var(--ink-3); font-weight: 600; margin-bottom: 6px; }
+  .view-grid .col li { font-size: 13px; line-height: 1.5; color: var(--ink-2); margin: 3px 0; }
   .view-grid .col.flags li { color: var(--bad); }
-  .view-guideline-row {
-    margin-top: 14px;
-    padding-top: 10px;
-    border-top: 1px solid var(--rule-2);
-    font-size: 12px;
-    color: var(--ink-3);
-  }
+  .view-guideline-row { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--rule-2); font-size: 12px; color: var(--ink-3); }
   .view-guideline-row strong { color: var(--ink-2); font-weight: 500; }
   .view details { margin-top: 12px; }
-  .view details summary {
-    font-size: 12px;
-    color: var(--ink-3);
-    cursor: pointer;
-    list-style: none;
-    user-select: none;
-  }
+  .view details summary { font-size: 12px; color: var(--ink-3); cursor: pointer; list-style: none; user-select: none; }
   .view details summary::-webkit-details-marker { display: none; }
   .view details summary::after { content: "▾"; margin-left: 6px; opacity: 0.5; transition: transform 0.15s; display: inline-block; }
   .view details[open] summary::after { transform: rotate(180deg); }
-  .view details .reasoning {
-    margin: 10px 0 0;
-    padding: 12px 14px;
-    background: var(--paper);
-    border: 1px solid var(--rule-2);
-    border-radius: var(--radius);
-    font-size: 12px;
-    line-height: 1.55;
-    color: var(--ink-2);
-  }
+  .view details .reasoning { margin-top: 10px; padding: 14px 16px; background: var(--paper); border: 1px solid var(--rule-2); border-radius: var(--radius); font-size: 12px; line-height: 1.55; color: var(--ink-2); }
   .view details .reasoning ol { margin: 0; padding-left: 18px; }
 
-  .empty-state {
-    color: var(--ink-3);
-    font-size: 13px;
-    padding: 18px 0;
-    font-style: italic;
-  }
+  /* ── Audit tab ─────────────────────────────────────────────────────── */
+  .audit-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  .audit-table thead th { text-align: left; font-weight: 600; color: var(--ink-3); padding: 10px 14px; border-bottom: 1px solid var(--rule); text-transform: uppercase; font-size: 10px; letter-spacing: 0.16em; background: var(--paper-2); }
+  .audit-table tbody td { padding: 10px 14px; border-bottom: 1px solid var(--rule-2); vertical-align: top; background: var(--paper-2); }
+  .audit-table .when { font-family: var(--mono); font-size: 11px; color: var(--ink-3); white-space: nowrap; width: 100px; }
+  .audit-table .actor { color: var(--navy-700); font-weight: 500; white-space: nowrap; }
+  .audit-table .action { color: var(--ink-2); font-family: var(--mono); font-size: 11px; }
+  .audit-table .payload { color: var(--ink-2); font-size: 12px; word-break: break-word; }
+
+  /* ── Empty state, errors ───────────────────────────────────────────── */
+  .empty-state { color: var(--ink-3); font-size: 13px; padding: 32px 0; font-style: italic; text-align: center; }
+  .pill-warn { display: inline-flex; gap: 6px; align-items: center; font-size: 12px; color: var(--warn); background: rgba(176, 122, 26, 0.08); border: 1px solid rgba(176, 122, 26, 0.25); padding: 8px 12px; border-radius: var(--radius); }
 
   /* ── Footer ────────────────────────────────────────────────────────── */
-  footer {
-    border-top: 1px solid var(--rule);
-    padding: 28px 32px 60px;
-    color: var(--ink-3);
-    font-size: 12px;
-  }
-  footer .footer-inner {
-    max-width: 1240px;
-    margin: 0 auto;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 16px;
-  }
-  footer .colophon {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-  }
+  footer { border-top: 1px solid var(--rule); padding: 22px 32px 50px; color: var(--ink-3); font-size: 12px; background: var(--paper); }
+  footer .footer-inner { max-width: 1320px; margin: 0 auto; display: flex; justify-content: space-between; align-items: center; gap: 16px; }
+  footer .colophon { display: flex; align-items: center; gap: 10px; }
   footer .colophon img { width: 18px; height: 18px; opacity: 0.65; }
-  footer .links a { color: var(--ink-2); margin-left: 16px; text-decoration: none; }
+  footer .links a { color: var(--ink-2); margin-left: 18px; text-decoration: none; }
   footer .links a:hover { color: var(--navy-700); text-decoration: underline; }
 
-  /* ── Loading shimmer ───────────────────────────────────────────────── */
-  .shimmer {
-    background: linear-gradient(90deg, var(--rule-2) 0%, var(--paper-2) 50%, var(--rule-2) 100%);
-    background-size: 200% 100%;
-    animation: shimmer 1.4s ease-in-out infinite;
-    border-radius: var(--radius);
-  }
-  @keyframes shimmer {
-    0% { background-position: -100% 0; }
-    100% { background-position: 100% 0; }
+  /* ── Responsive helpers ────────────────────────────────────────────── */
+  @media (max-width: 640px) {
+    .topbar-inner, .title-inner, .tabs, main, .footer-inner { padding-left: 18px; padding-right: 18px; }
+    .topbar-inner { gap: 12px; }
+    .session-summary .ref { display: none; }
+    h1 { font-size: 22px; }
   }
 </style>
 </head>
 <body>
+
+<div class="app">
 
 <div class="topbar">
   <div class="topbar-inner">
@@ -647,98 +268,88 @@
       </div>
     </div>
     <div class="topbar-spacer"></div>
-    <div class="session-meta">
-      <div id="session-status"></div>
-      <div class="id" id="session-ref">—</div>
+    <div class="session-summary">
+      <span class="ref" id="session-ref">—</span>
+      <span id="session-status"></span>
     </div>
   </div>
 </div>
 
-<section class="page-header">
-  <div class="eyebrow">Convening session</div>
-  <h1>The Council deliberates on <span class="accent" id="patient-display">a multi-morbid patient</span>.</h1>
-  <p class="subtitle">
-    Eight specialty agents review the chart through their own clinical lens, exchange peer A2A messages,
-    surface conflicts, and synthesize a single concordant plan. This page renders the deliberation as it happens.
-  </p>
-</section>
+<div class="title-strip">
+  <div class="title-inner">
+    <div class="eyebrow">Convening session</div>
+    <h1>The Council deliberates on <span class="accent" id="patient-display">a multi-morbid patient</span>.</h1>
+    <p class="subtitle">Eight specialty agents review the chart through their own clinical lens, exchange peer A2A messages, surface conflicts, and synthesize a single concordant plan. This page renders the deliberation as it happens.</p>
+
+    <nav class="tabs" role="tablist">
+      <button class="tab active" data-tab="plan" role="tab">
+        Concordant Plan
+        <span class="count" id="count-actions">—</span>
+      </button>
+      <button class="tab" data-tab="deliberation" role="tab">
+        Live Deliberation
+        <span class="count" id="count-events">—</span>
+      </button>
+      <button class="tab" data-tab="consults" role="tab">
+        Specialty Consults
+        <span class="count" id="count-views">—</span>
+      </button>
+      <button class="tab" data-tab="audit" role="tab">Audit Log</button>
+    </nav>
+  </div>
+</div>
 
 <main>
-  <aside>
-    <div class="card">
-      <div class="label">Specialty agents</div>
-      <div class="roster" id="roster"></div>
-      <div class="stats">
-        <div class="stat"><div class="v" id="stat-views">0</div><div class="k">Specialty views</div></div>
-        <div class="stat"><div class="v" id="stat-tools">0</div><div class="k">Tool calls</div></div>
-        <div class="stat"><div class="v" id="stat-fhir">0</div><div class="k">FHIR refs</div></div>
-        <div class="stat"><div class="v" id="stat-events">0</div><div class="k">Audit events</div></div>
-      </div>
-    </div>
 
-    <div class="card timeline-card" style="margin-top: 20px;">
-      <div class="label">Audit timeline</div>
-      <div class="timeline" id="timeline">
-        <div class="empty-state" id="timeline-empty" style="padding: 0 24px;">Waiting for the convening to start…</div>
-      </div>
-    </div>
-  </aside>
-
-  <section>
-    <div id="plan-doc" class="plan-doc">
-      <div class="doc-meta">
-        <div><strong id="doc-specialty-count">—</strong> specialties consulted</div>
-        <div><strong id="doc-action-count">—</strong> action items</div>
-        <div><strong id="doc-conflict-count">—</strong> conflicts</div>
-        <div><strong id="doc-dissent-count">—</strong> preserved dissents</div>
-      </div>
-
-      <div class="doc-section">
-        <div class="section-eyebrow">Concordant Plan</div>
-        <h2>Brief</h2>
-        <div class="summary-block">
-          <p id="brief-summary"></p>
-          <p class="rationale" id="brief-rationale"></p>
-        </div>
-      </div>
-
-      <div class="doc-section">
-        <div class="section-eyebrow">Plan</div>
-        <h2>Continue · Start · Stop · Monitor</h2>
-        <div class="plan-grid">
-          <div class="plan-quadrant continue"><h3>Continue</h3><ul id="q-continue"></ul></div>
-          <div class="plan-quadrant start"><h3>Start</h3><ul id="q-start"></ul></div>
-          <div class="plan-quadrant stop"><h3>Stop</h3><ul id="q-stop"></ul></div>
-          <div class="plan-quadrant monitor"><h3>Monitor</h3><ul id="q-monitor"></ul></div>
-        </div>
-        <div id="timing-notes"></div>
-      </div>
-
-      <div class="doc-section">
-        <div class="section-eyebrow">Action plan</div>
-        <h2>Tasks for the primary clinician</h2>
-        <div id="actions"></div>
-      </div>
-
-      <div class="doc-section" id="conflicts-section" style="display:none;">
-        <div class="section-eyebrow">Conflict log</div>
-        <h2>How disagreements were resolved</h2>
-        <div id="conflicts"></div>
-      </div>
-
-      <div class="doc-section" id="dissents-section" style="display:none;">
-        <div class="section-eyebrow">Preserved dissents</div>
-        <h2>Where the Council did not converge</h2>
-        <div id="dissents"></div>
-      </div>
-    </div>
-
-    <div class="doc-section">
-      <div class="section-eyebrow">Specialty consult notes</div>
-      <h2>Per-specialty perspectives</h2>
-      <div class="views-stack" id="views"></div>
+  <!-- ── Plan tab ─────────────────────────────────────────────────── -->
+  <section class="panel active" data-panel="plan" id="panel-plan">
+    <div id="plan-content">
+      <div class="empty-state">Plan will appear once the Council finishes synthesising.</div>
     </div>
   </section>
+
+  <!-- ── Deliberation tab ─────────────────────────────────────────── -->
+  <section class="panel" data-panel="deliberation" id="panel-deliberation">
+    <div class="grid-2-eq">
+      <div class="card">
+        <div class="label" style="margin-bottom:14px;">Specialty agents</div>
+        <div class="roster" id="roster"></div>
+      </div>
+      <div class="card">
+        <div class="label" style="margin-bottom:14px;">Audit timeline</div>
+        <div class="timeline" id="timeline">
+          <div class="empty-state">Waiting for the convening to start…</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── Consults tab ─────────────────────────────────────────────── -->
+  <section class="panel" data-panel="consults" id="panel-consults">
+    <div class="views-stack" id="views">
+      <div class="empty-state">No specialty views recorded yet.</div>
+    </div>
+  </section>
+
+  <!-- ── Audit tab ────────────────────────────────────────────────── -->
+  <section class="panel" data-panel="audit" id="panel-audit">
+    <div class="card-tight" style="padding:0;overflow:auto;">
+      <table class="audit-table">
+        <thead>
+          <tr>
+            <th>Time</th>
+            <th>Actor</th>
+            <th>Action</th>
+            <th>Payload</th>
+          </tr>
+        </thead>
+        <tbody id="audit-body">
+          <tr><td colspan="4" class="empty-state">No audit events yet.</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </section>
+
 </main>
 
 <footer>
@@ -749,13 +360,21 @@
     </div>
     <div class="links">
       <a href="https://github.com/council-health-ai/council" target="_blank" rel="noopener">Source</a>
-      <a href="https://sharponmcp.com" target="_blank" rel="noopener">SHARP-on-MCP</a>
+      <a href="https://sharponmcp.com" target="_blank" rel="noopener">SHARP-on-MCP</</a>
     </div>
   </div>
 </footer>
 
+</div>
+
 <script type="module">
   import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
+
+  // Clean URL — kill /index.html and any stray HF query noise from the address bar.
+  if (window.location.pathname.endsWith("/index.html")) {
+    const cleanPath = window.location.pathname.slice(0, -"/index.html".length) || "/";
+    history.replaceState(null, "", cleanPath + window.location.search + window.location.hash);
+  }
 
   const SUPABASE_URL = "https://pjduqabwrnnldrfkmqdn.supabase.co";
   const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBqZHVxYWJ3cm5ubGRyZmttcWRuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczMDc0NTksImV4cCI6MjA5Mjg4MzQ1OX0.RqucDw4iPfuWkRudeqyb-a4qRLou1-DfhX7JntZ1dlY";
@@ -764,7 +383,6 @@
     "cardiology", "oncology", "nephrology", "endocrinology",
     "obstetrics", "developmental_pediatrics", "psychiatry", "anesthesia",
   ];
-
   const HUMAN = {
     convener: "Convener",
     cardiology: "Cardiology",
@@ -799,13 +417,13 @@
 
   const state = {
     sessionId: null,
+    sessionStatus: null,
     specialties: {},
     events: [],
     views: [],
     plan: null,
     fhirRefs: new Set(),
     toolCount: 0,
-    sessionStatus: null,
   };
 
   function escapeHtml(s) {
@@ -817,6 +435,27 @@
     return new Date(ts).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false });
   }
 
+  /* ── Tabs ────────────────────────────────────────────────────────── */
+  function activateTab(name, push = true) {
+    for (const t of document.querySelectorAll(".tab")) t.classList.toggle("active", t.dataset.tab === name);
+    for (const p of document.querySelectorAll(".panel")) p.classList.toggle("active", p.dataset.panel === name);
+    if (push) {
+      const url = new URL(window.location.href);
+      url.hash = name === "plan" ? "" : "#" + name;
+      history.replaceState(null, "", url.toString());
+    }
+  }
+  for (const t of document.querySelectorAll(".tab")) {
+    t.addEventListener("click", () => activateTab(t.dataset.tab));
+  }
+  if (window.location.hash) {
+    const target = window.location.hash.slice(1);
+    if (["plan", "deliberation", "consults", "audit"].includes(target)) {
+      activateTab(target, false);
+    }
+  }
+
+  /* ── Renderers ──────────────────────────────────────────────────── */
   function renderRoster() {
     const root = document.getElementById("roster");
     root.innerHTML = "";
@@ -826,18 +465,20 @@
       row.className = `roster-row ${meta.status}`;
       row.innerHTML = `
         <span class="indicator"></span>
-        <span class="name">${HUMAN[spec]}</span>
+        <div class="meta">
+          <div class="name">${HUMAN[spec]}</div>
+          <div class="blurb">${ROLE_BLURB[spec] ?? ""}</div>
+        </div>
         <span class="latency">${meta.latency_ms ? meta.latency_ms + "ms" : ""}</span>
       `;
       root.appendChild(row);
     }
   }
 
-  function renderStats() {
-    document.getElementById("stat-views").textContent = state.views.length;
-    document.getElementById("stat-tools").textContent = state.toolCount;
-    document.getElementById("stat-fhir").textContent = state.fhirRefs.size;
-    document.getElementById("stat-events").textContent = state.events.length;
+  function renderCounts() {
+    document.getElementById("count-actions").textContent = (state.plan?.action_items?.length ?? 0);
+    document.getElementById("count-events").textContent = state.events.length;
+    document.getElementById("count-views").textContent = state.views.length;
   }
 
   function eventDescription(e) {
@@ -847,12 +488,12 @@
     if (a === "session_started") return { actor: "Convener", text: "Convening session opened", flag: true };
     if (a === "tool_called") {
       const tool = e.payload?.tool ?? "tool";
-      return { actor: human, text: `Calls <span style="font-family:var(--mono);font-size:12px;color:var(--ink-3);">${escapeHtml(tool)}</span>` };
+      return { actor: human, text: `Calls <span class="mono" style="color:var(--ink-3);">${escapeHtml(tool)}</span>` };
     }
     if (a === "tool_returned") {
       const concerns = e.payload?.primary_concerns?.length ?? 0;
       const flags = e.payload?.red_flags?.length ?? 0;
-      return { actor: human, text: `Returns ${concerns} concerns, ${flags} red flag${flags === 1 ? "" : "s"}` };
+      return { actor: human, text: `Returns ${concerns} concern${concerns === 1 ? "" : "s"}, ${flags} red flag${flags === 1 ? "" : "s"}` };
     }
     if (a === "plan_synthesized") {
       const n = e.payload?.n_actions ?? 0;
@@ -864,8 +505,11 @@
 
   function renderTimeline() {
     const tl = document.getElementById("timeline");
-    document.getElementById("timeline-empty")?.remove();
     tl.innerHTML = "";
+    if (state.events.length === 0) {
+      tl.innerHTML = `<div class="empty-state">Waiting for the convening to start…</div>`;
+      return;
+    }
     for (const e of state.events) {
       const desc = eventDescription(e);
       const div = document.createElement("div");
@@ -876,138 +520,182 @@
       `;
       tl.appendChild(div);
     }
-    tl.scrollTop = tl.scrollHeight;
   }
 
   function renderPlan() {
-    if (!state.plan) return;
+    const root = document.getElementById("plan-content");
+    if (!state.plan) {
+      root.innerHTML = `<div class="empty-state">Plan will appear once the Council finishes synthesising.</div>`;
+      return;
+    }
     const p = state.plan;
-    document.getElementById("plan-doc").classList.add("visible");
 
-    // Header counts
-    document.getElementById("doc-specialty-count").textContent = (p.specialties_consulted || []).length;
-    document.getElementById("doc-action-count").textContent = (p.action_items || []).length;
-    document.getElementById("doc-conflict-count").textContent = (p.conflict_log || []).length;
-    document.getElementById("doc-dissent-count").textContent = (p.dissents || []).length;
+    const continueItems = p.brief?.plan?.continue ?? [];
+    const startItems    = p.brief?.plan?.start ?? [];
+    const stopItems     = p.brief?.plan?.stop ?? [];
+    const monitorItems  = p.brief?.plan?.monitor ?? [];
+    const timing        = p.brief?.timing_notes ?? [];
+    const actions       = p.action_items ?? [];
+    const conflicts     = p.conflict_log ?? [];
+    const dissents      = p.dissents ?? [];
+    const consulted     = p.specialties_consulted ?? [];
+    const fhirCount     = p.audit_summary?.fhir_resources_touched ?? state.fhirRefs.size;
 
-    document.getElementById("brief-summary").textContent = p.brief?.summary ?? "";
-    document.getElementById("brief-rationale").textContent = p.brief?.rationale ?? "";
+    const renderList = (items, emptyText="—") =>
+      items.length ? items.map(i => `<li>${escapeHtml(i)}</li>`).join("") : `<li class="empty">${emptyText}</li>`;
 
-    for (const k of ["continue", "start", "stop", "monitor"]) {
-      const ul = document.getElementById(`q-${k}`);
-      const items = p.brief?.plan?.[k] ?? [];
-      ul.innerHTML = items.length ? items.map(i => `<li>${escapeHtml(i)}</li>`).join("") : `<li style="color:var(--ink-3);font-style:italic;">no items</li>`;
-      ul.parentElement.classList.toggle("empty", items.length === 0);
-    }
+    const conflictsHtml = conflicts.length === 0 ? "" : `
+      <div class="doc-section">
+        <div class="section-eyebrow">Conflict log</div>
+        <h2>How disagreements were resolved</h2>
+        ${conflicts.map(c => {
+          const positions = (c.initial_positions || []).map(pos =>
+            `<li><strong>${escapeHtml(HUMAN[pos.specialty] ?? pos.specialty)}:</strong> ${escapeHtml(pos.position ?? "")}</li>`
+          ).join("");
+          return `
+            <div class="conflict">
+              <div class="topic">${escapeHtml(c.topic ?? "")} <span class="method-pill ${c.method ?? ""}">${escapeHtml(c.method ?? "")}</span></div>
+              ${positions ? `<ul class="positions">${positions}</ul>` : ""}
+              <div class="resolution"><strong>Resolution.</strong> ${escapeHtml(c.resolution ?? "")}</div>
+            </div>
+          `;
+        }).join("")}
+      </div>
+    `;
 
-    // Timing notes (footnote-ish)
-    const tn = p.brief?.timing_notes;
-    const tnEl = document.getElementById("timing-notes");
-    tnEl.innerHTML = "";
-    if (tn && tn.length) {
-      const div = document.createElement("div");
-      div.style.cssText = "margin-top:18px;padding:14px 18px;background:var(--paper);border:1px solid var(--rule-2);border-radius:var(--radius);font-size:13px;color:var(--ink-2);";
-      div.innerHTML = `<strong style="font-family:var(--sans);font-size:11px;text-transform:uppercase;letter-spacing:0.14em;color:var(--ink-3);font-weight:600;display:block;margin-bottom:6px;">Timing notes</strong><ul style="margin:0;padding-left:18px;">${tn.map(n => `<li style="margin:4px 0;">${escapeHtml(n)}</li>`).join("")}</ul>`;
-      tnEl.appendChild(div);
-    }
-
-    // Action items
-    const actionsRoot = document.getElementById("actions");
-    actionsRoot.innerHTML = "";
-    for (const a of p.action_items || []) {
-      const div = document.createElement("div");
-      div.className = "action";
-      div.innerHTML = `
-        <div>
-          <div class="desc">${escapeHtml(a.description ?? "")}</div>
-          <div class="meta">
-            <span>Owner: <strong>${escapeHtml(a.owner ?? "primary care")}</strong></span>
-            <span>·</span>
-            <span>Due: <strong>${escapeHtml(a.due_within ?? "—")}</strong></span>
+    const dissentsHtml = dissents.length === 0 ? "" : `
+      <div class="doc-section">
+        <div class="section-eyebrow">Preserved dissents</div>
+        <h2>Where the Council did not converge</h2>
+        ${dissents.map(d => `
+          <div class="dissent">
+            <div class="who">${escapeHtml(HUMAN[d.specialty] ?? d.specialty)}</div>
+            <div class="position">"${escapeHtml(d.position ?? "")}"</div>
+            <div class="rationale">${escapeHtml(d.rationale ?? "")}</div>
           </div>
+        `).join("")}
+      </div>
+    `;
+
+    root.innerHTML = `
+      <div class="doc-meta">
+        <div class="cell"><div class="v">${consulted.length}</div><div class="k">Specialties consulted</div></div>
+        <div class="cell"><div class="v">${actions.length}</div><div class="k">Action items</div></div>
+        <div class="cell"><div class="v">${conflicts.length}</div><div class="k">Conflicts</div></div>
+        <div class="cell"><div class="v">${dissents.length}</div><div class="k">Preserved dissents</div></div>
+      </div>
+
+      <div class="doc-section">
+        <div class="section-eyebrow">Concordant Plan</div>
+        <h2>Brief</h2>
+        <div class="summary-block">
+          <p class="lede">${escapeHtml(p.brief?.summary ?? "")}</p>
+          <p class="rationale">${escapeHtml(p.brief?.rationale ?? "")}</p>
         </div>
-        <span class="priority ${a.priority || "routine"}">${a.priority || "routine"}</span>
-      `;
-      actionsRoot.appendChild(div);
-    }
+      </div>
 
-    // Conflicts
-    const conflicts = p.conflict_log || [];
-    document.getElementById("conflicts-section").style.display = conflicts.length ? "block" : "none";
-    const cRoot = document.getElementById("conflicts");
-    cRoot.innerHTML = "";
-    for (const c of conflicts) {
-      const div = document.createElement("div");
-      div.className = "conflict";
-      const positions = (c.initial_positions || []).map(pos =>
-        `<li><strong>${escapeHtml(HUMAN[pos.specialty] ?? pos.specialty)}:</strong> ${escapeHtml(pos.position ?? "")}</li>`
-      ).join("");
-      div.innerHTML = `
-        <div class="topic">${escapeHtml(c.topic ?? "")} <span class="method-pill ${c.method ?? ""}">${escapeHtml(c.method ?? "")}</span></div>
-        ${positions ? `<ul class="positions">${positions}</ul>` : ""}
-        <div class="resolution"><strong>Resolution.</strong> ${escapeHtml(c.resolution ?? "")}</div>
-      `;
-      cRoot.appendChild(div);
-    }
+      <div class="doc-section">
+        <div class="section-eyebrow">Plan</div>
+        <h2>Continue · Start · Stop · Monitor</h2>
+        <div class="plan-grid">
+          <div class="plan-quadrant continue"><h3>Continue</h3><ul>${renderList(continueItems)}</ul></div>
+          <div class="plan-quadrant start"><h3>Start</h3><ul>${renderList(startItems)}</ul></div>
+          <div class="plan-quadrant stop"><h3>Stop</h3><ul>${renderList(stopItems)}</ul></div>
+          <div class="plan-quadrant monitor"><h3>Monitor</h3><ul>${renderList(monitorItems)}</ul></div>
+        </div>
+        ${timing.length ? `
+          <div class="timing-notes">
+            <h4>Timing notes</h4>
+            <ul>${timing.map(n => `<li>${escapeHtml(n)}</li>`).join("")}</ul>
+          </div>` : ""}
+      </div>
 
-    // Dissents
-    const dissents = p.dissents || [];
-    document.getElementById("dissents-section").style.display = dissents.length ? "block" : "none";
-    const dRoot = document.getElementById("dissents");
-    dRoot.innerHTML = "";
-    for (const d of dissents) {
-      const div = document.createElement("div");
-      div.className = "dissent";
-      div.innerHTML = `
-        <div class="who">${escapeHtml(HUMAN[d.specialty] ?? d.specialty)}</div>
-        <div class="position">"${escapeHtml(d.position ?? "")}"</div>
-        <div class="rationale">${escapeHtml(d.rationale ?? "")}</div>
-      `;
-      dRoot.appendChild(div);
-    }
+      <div class="doc-section">
+        <div class="section-eyebrow">Action plan</div>
+        <h2>Tasks for the primary clinician</h2>
+        ${actions.length === 0 ? '<div class="empty-state">No action items.</div>' : actions.map(a => `
+          <div class="action">
+            <div>
+              <div class="desc">${escapeHtml(a.description ?? "")}</div>
+              <div class="meta">
+                <span>Owner: <strong>${escapeHtml(a.owner ?? "primary care")}</strong></span>
+                <span>·</span>
+                <span>Due: <strong>${escapeHtml(a.due_within ?? "—")}</strong></span>
+              </div>
+            </div>
+            <span class="priority ${a.priority || "routine"}">${a.priority || "routine"}</span>
+          </div>
+        `).join("")}
+      </div>
 
-    // Patient summary heading from brief
-    if (p.patient_id) {
-      const display = p.brief?.summary ? p.brief.summary.split(".")[0] + "." : `patient ${p.patient_id.slice(0, 8)}…`;
-      document.getElementById("patient-display").textContent = display.length > 90 ? display.slice(0, 87) + "…" : display;
+      ${conflictsHtml}
+      ${dissentsHtml}
+    `;
+
+    if (p.brief?.summary) {
+      const display = p.brief.summary.split(".")[0] + ".";
+      const txt = display.length > 110 ? display.slice(0, 107) + "…" : display;
+      document.getElementById("patient-display").textContent = txt;
     }
   }
 
   function renderViews() {
     const root = document.getElementById("views");
-    root.innerHTML = "";
     if (state.views.length === 0) {
       root.innerHTML = `<div class="empty-state">No specialty views recorded yet.</div>`;
       return;
     }
-    for (const v of state.views) {
-      const div = document.createElement("div");
-      div.className = "view";
+    root.innerHTML = state.views.map(v => {
       const concerns = (v.primary_concerns || []).map(c => `<li>${escapeHtml(c)}</li>`).join("");
       const flags = (v.red_flags || []).map(c => `<li>${escapeHtml(c)}</li>`).join("");
       const guidelines = (v.applicable_guidelines || []).slice(0, 4).join(" · ");
       const reasoning = (v.reasoning_trace || []).map(r => `<li>${escapeHtml(r)}</li>`).join("");
-      div.innerHTML = `
-        <div class="view-header">
-          <div class="specialty">${escapeHtml(HUMAN[v.specialty] ?? v.specialty)}</div>
-          <div class="role">${escapeHtml(ROLE_BLURB[v.specialty] ?? "")}</div>
-        </div>
-        ${v.patient_summary_excerpt ? `<div class="summary">${escapeHtml(v.patient_summary_excerpt)}</div>` : ""}
-        <div class="view-grid">
-          <div class="col">
-            <h4>Primary concerns</h4>
-            ${concerns ? `<ul>${concerns}</ul>` : `<div class="empty-state" style="padding:0;">none</div>`}
+      const concernCount = (v.primary_concerns || []).length;
+      const flagCount = (v.red_flags || []).length;
+      return `
+        <div class="view">
+          <div class="view-header">
+            <div class="specialty">${escapeHtml(HUMAN[v.specialty] ?? v.specialty)}</div>
+            <div class="role">${escapeHtml(ROLE_BLURB[v.specialty] ?? "")}</div>
+            <span class="badge">${concernCount} concern${concernCount === 1 ? "" : "s"} · ${flagCount} red flag${flagCount === 1 ? "" : "s"}</span>
           </div>
-          <div class="col flags">
-            <h4>Red flags</h4>
-            ${flags ? `<ul>${flags}</ul>` : `<div class="empty-state" style="padding:0;">none</div>`}
+          ${v.patient_summary_excerpt ? `<div class="summary">${escapeHtml(v.patient_summary_excerpt)}</div>` : ""}
+          <div class="view-grid">
+            <div class="col">
+              <h4>Primary concerns</h4>
+              ${concerns ? `<ul>${concerns}</ul>` : `<div class="empty-state" style="padding:0;text-align:left;">none</div>`}
+            </div>
+            <div class="col flags">
+              <h4>Red flags</h4>
+              ${flags ? `<ul>${flags}</ul>` : `<div class="empty-state" style="padding:0;text-align:left;">none</div>`}
+            </div>
           </div>
+          ${guidelines ? `<div class="view-guideline-row"><strong>Applicable guidelines:</strong> ${escapeHtml(guidelines)}</div>` : ""}
+          ${reasoning ? `<details><summary>Reasoning trace · ${(v.reasoning_trace || []).length} steps</summary><div class="reasoning"><ol>${reasoning}</ol></div></details>` : ""}
         </div>
-        ${guidelines ? `<div class="view-guideline-row"><strong>Applicable guidelines:</strong> ${escapeHtml(guidelines)}</div>` : ""}
-        ${reasoning ? `<details><summary>Reasoning trace · ${(v.reasoning_trace || []).length} steps</summary><div class="reasoning"><ol>${reasoning}</ol></div></details>` : ""}
       `;
-      root.appendChild(div);
+    }).join("");
+  }
+
+  function renderAudit() {
+    const tbody = document.getElementById("audit-body");
+    if (state.events.length === 0) {
+      tbody.innerHTML = `<tr><td colspan="4" class="empty-state">No audit events yet.</td></tr>`;
+      return;
     }
+    tbody.innerHTML = state.events.map(e => {
+      const actor = (e.actor || "").replace(/^agent\//, "").replace(/^lens-mcp\//, "lens/");
+      const human = HUMAN[actor.replace("lens/", "")] || actor;
+      const payload = e.payload && Object.keys(e.payload).length ? JSON.stringify(e.payload) : "";
+      return `
+        <tr>
+          <td class="when">${timeFmt(e.created_at)}</td>
+          <td class="actor">${escapeHtml(human)}</td>
+          <td class="action">${escapeHtml(e.action)}</td>
+          <td class="payload">${escapeHtml(payload).slice(0, 300)}</td>
+        </tr>
+      `;
+    }).join("");
   }
 
   function renderSessionMeta() {
@@ -1023,10 +711,20 @@
     statusEl.innerHTML = `<span class="status-pill ${status}"><span class="dot"></span>${status}</span>`;
   }
 
+  function renderAll() {
+    renderRoster();
+    renderTimeline();
+    renderPlan();
+    renderViews();
+    renderAudit();
+    renderCounts();
+    renderSessionMeta();
+  }
+
+  /* ── Data ───────────────────────────────────────────────────────── */
   function handleEvent(e) {
     if (e.fhir_refs) for (const r of e.fhir_refs) state.fhirRefs.add(r);
     if (e.action === "tool_called") state.toolCount += 1;
-
     const actor = e.actor || "";
     const m = actor.match(/^(?:agent|lens-mcp)\/(\w+)/);
     if (m && m[1] !== "convener") {
@@ -1038,7 +736,6 @@
       }
     }
   }
-
   function handleMessage(m) {
     if (m.role === "convener") return;
     if (m.direction !== "inbound") return;
@@ -1060,45 +757,24 @@
         state.sessionStatus = data[0].status;
       }
     }
-    renderSessionMeta();
     if (!state.sessionId) {
-      document.getElementById("timeline-empty").textContent = "No convening sessions yet.";
+      renderAll();
       return;
     }
 
-    const { data: events } = await supabase
-      .from("audit_events")
-      .select("*")
-      .eq("convening_id", state.sessionId)
-      .order("created_at", { ascending: true });
-    if (events) {
-      state.events = events;
-      events.forEach(handleEvent);
-    }
+    const [{ data: events }, { data: msgs }, { data: session }] = await Promise.all([
+      supabase.from("audit_events").select("*").eq("convening_id", state.sessionId).order("created_at", { ascending: true }),
+      supabase.from("agent_messages").select("*").eq("convening_id", state.sessionId).order("created_at", { ascending: true }),
+      supabase.from("convening_sessions").select("plan_artifact, status, patient_id").eq("id", state.sessionId).single(),
+    ]);
 
-    const { data: msgs } = await supabase
-      .from("agent_messages")
-      .select("*")
-      .eq("convening_id", state.sessionId)
-      .order("created_at", { ascending: true });
+    if (events) { state.events = events; events.forEach(handleEvent); }
     if (msgs) msgs.forEach(handleMessage);
-
-    const { data: session } = await supabase
-      .from("convening_sessions")
-      .select("plan_artifact, status, patient_id")
-      .eq("id", state.sessionId)
-      .single();
     if (session) {
       state.sessionStatus = session.status;
       if (session.plan_artifact) state.plan = session.plan_artifact;
     }
-
-    renderRoster();
-    renderTimeline();
-    renderStats();
-    renderPlan();
-    renderViews();
-    renderSessionMeta();
+    renderAll();
   }
 
   function subscribeRealtime() {
@@ -1106,16 +782,16 @@
     supabase.channel(`audit-${state.sessionId}`)
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "audit_events", filter: `convening_id=eq.${state.sessionId}` }, p => {
         const e = p.new; state.events.push(e); handleEvent(e);
-        renderRoster(); renderTimeline(); renderStats();
+        renderRoster(); renderTimeline(); renderAudit(); renderCounts();
       }).subscribe();
     supabase.channel(`msg-${state.sessionId}`)
       .on("postgres_changes", { event: "INSERT", schema: "public", table: "agent_messages", filter: `convening_id=eq.${state.sessionId}` }, p => {
-        handleMessage(p.new); renderRoster(); renderStats(); renderViews();
+        handleMessage(p.new); renderRoster(); renderViews(); renderCounts();
       }).subscribe();
     supabase.channel(`session-${state.sessionId}`)
       .on("postgres_changes", { event: "UPDATE", schema: "public", table: "convening_sessions", filter: `id=eq.${state.sessionId}` }, p => {
         state.sessionStatus = p.new.status;
-        if (p.new.plan_artifact) { state.plan = p.new.plan_artifact; renderPlan(); }
+        if (p.new.plan_artifact) { state.plan = p.new.plan_artifact; renderPlan(); renderCounts(); }
         renderSessionMeta();
       }).subscribe();
   }
