@@ -353,17 +353,20 @@ async def fan_out(
     fhir_metadata: dict[str, Any] | None,
     api_key: str | None = None,
     timeout_seconds: float = 90.0,
-    max_concurrency: int = 4,
+    max_concurrency: int = 8,
+    wallclock_cap_seconds: float | None = None,
 ) -> list[PeerResult]:
-    """Send the same/different prompt to multiple peers in parallel. Each peer's url is hit
-    via its A2A AgentCard. Returns one PeerResult per call (success or error).
+    """Send the same/different prompt to multiple peers in parallel.
 
-    `max_concurrency` defaults to 4 — Vertex on a trial-credit project enforces
-    a tighter RPM ceiling than the documented 60 RPM, and bursting 8 in <1s
-    consistently 429s ~half of them. Concurrency=4 leaves quota headroom for
-    the immediately-following concordance_brief MCP call (which is also a
-    Gemini hop) without pushing the rolling-minute window over the cliff.
-    Per-peer retries in _call_one_peer cover any remaining 429s.
+    `max_concurrency` defaults to 8 (full parallel). Vertex with retries handles
+    the burst; what we lose to occasional 429s is mostly recovered by the per-peer
+    backoff layer in _call_one_peer.
+
+    `wallclock_cap_seconds`: if set, stops waiting for in-flight calls after this
+    deadline and returns whatever's done. Pending tasks are cancelled and represented
+    as failed PeerResults so the caller has a complete row per requested peer.
+    Used by the Convener to fit Round 1 inside Prompt Opinion's 60s General Chat
+    timeout — slow specialties get dropped, the brief synthesises from the rest.
     """
     api_key = api_key or settings.peer_api_key
     headers = {"X-API-Key": api_key} if api_key else {}
@@ -390,5 +393,38 @@ async def fan_out(
                     api_key=api_key or "",
                 )
 
-        results = await asyncio.gather(*(run_one(c) for c in calls), return_exceptions=False)
-    return list(results)
+        tasks = [asyncio.create_task(run_one(c)) for c in calls]
+        if wallclock_cap_seconds is not None:
+            done, pending = await asyncio.wait(tasks, timeout=wallclock_cap_seconds)
+            for t in pending:
+                t.cancel()
+            # Suppress cancellation noise; we'll fabricate failure results below.
+            await asyncio.gather(*pending, return_exceptions=True)
+            results: list[PeerResult] = []
+            for call, t in zip(calls, tasks, strict=True):
+                if t in done and not t.cancelled():
+                    try:
+                        results.append(t.result())
+                    except Exception as err:  # pragma: no cover - safety net
+                        results.append(
+                            PeerResult(
+                                specialty=call.specialty,
+                                url=call.url,
+                                success=False,
+                                error=f"task crashed: {err}",
+                                latency_ms=int(wallclock_cap_seconds * 1000),
+                            )
+                        )
+                else:
+                    results.append(
+                        PeerResult(
+                            specialty=call.specialty,
+                            url=call.url,
+                            success=False,
+                            error=f"wallclock cap {wallclock_cap_seconds}s exceeded",
+                            latency_ms=int(wallclock_cap_seconds * 1000),
+                        )
+                    )
+        else:
+            results = list(await asyncio.gather(*tasks, return_exceptions=False))
+    return results

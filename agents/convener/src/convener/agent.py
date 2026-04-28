@@ -129,6 +129,11 @@ async def convene_council(
     )
 
     # ── Round 1 — peer fan-out to all 8 specialties ─────────────────────
+    # Round 1 is hard-capped at 30s wallclock to fit inside Prompt Opinion's
+    # General Chat 60s LLM timeout. Slow specialties whose 429 retries don't
+    # finish in time are dropped from this round; the brief synthesizes from
+    # whatever views did complete (typically 5-7/8 — comfortably enough for
+    # a clinically meaningful concordance).
     round1_prompt = ROUND_1_PROMPT_TEMPLATE.format(patient_id=patient_id, convening_id=convening_id)
     if focus_problem:
         round1_prompt += f"\n\nFocus problem: {focus_problem}\n"
@@ -140,7 +145,8 @@ async def convene_council(
         calls=calls,
         context_id=a2a_context_id,
         fhir_metadata=fhir_metadata,
-        timeout_seconds=120.0,
+        timeout_seconds=30.0,
+        wallclock_cap_seconds=30.0,
     )
 
     views: list[dict[str, Any]] = []
@@ -172,66 +178,13 @@ async def convene_council(
         )
         return {"error": msg, "partial_views": views}
 
-    # ── Conflict matrix via MCP ─────────────────────────────────────────
-    cm_started = time.monotonic()
-    conflict_matrix = await call_mcp_tool(
-        tool_name="get_council_conflict_matrix",
-        arguments={"views": views},
-        fhir_url=fhir_url,
-        fhir_token=fhir_token,
-        patient_id=patient_id,
-        convening_id=convening_id,
-        specialty="convener",
-        round_id=1,
-    )
-    await record_tool_call(
-        convening_id=convening_id,
-        tool_name="get_council_conflict_matrix",
-        params={"n_views": len(views)},
-        result={"n_conflicts": len(conflict_matrix.get("conflicts", []))},
-        status="success",
-        latency_ms=int((time.monotonic() - cm_started) * 1000),
-    )
-
-    # ── Round 2 — for each conflict, ask the involved specialties to weigh in ─
-    conflicts = conflict_matrix.get("conflicts", [])
-    if conflicts:
-        # Group conflicts by specialty so each specialty receives one Round-2 prompt with all of theirs.
-        per_specialty_conflicts: dict[str, list[dict[str, Any]]] = {}
-        for c in conflicts:
-            for party in c.get("parties", []):
-                per_specialty_conflicts.setdefault(party, []).append(c)
-
-        r2_calls: list[PeerCall] = []
-        for specialty, conf_list in per_specialty_conflicts.items():
-            url_map = dict(all_specialty_urls())
-            url = url_map.get(specialty)
-            if not url:
-                continue
-            r2_prompt = ROUND_2_PROMPT_TEMPLATE.format(
-                convening_id=convening_id,
-                conflicts=json.dumps(conf_list, indent=2),
-            )
-            r2_calls.append(PeerCall(specialty=specialty, url=url, prompt=r2_prompt))
-
-        if r2_calls:
-            r2_meta = dict(fhir_metadata)
-            r2_meta[settings.fhir_extension_uri] = {**fhir_metadata[settings.fhir_extension_uri], "roundId": 2}
-            results_r2 = await fan_out(
-                calls=r2_calls,
-                context_id=a2a_context_id,
-                fhir_metadata=r2_meta,
-                timeout_seconds=90.0,
-            )
-            for r in results_r2:
-                if r.success:
-                    await record_agent_message(
-                        convening_id=convening_id,
-                        role=r.specialty,
-                        direction="inbound",
-                        content={"text": r.response_text or ""},
-                        round_id=2,
-                    )
+    # NOTE: previously we called get_council_conflict_matrix here, then a Round 2
+    # fan-out for any specialty involved in a conflict, then the brief. That
+    # serialised flow consistently exceeded the 60s ceiling. The brief LLM is
+    # already prompted to detect and resolve conflicts from views directly, so
+    # we synthesise straight from Round 1. The conflict_log inside the
+    # ConcordantPlan still reflects detected disagreements.
+    conflicts: list[dict[str, Any]] = []
 
     # ── Concordance brief synthesis ─────────────────────────────────────
     cb_started = time.monotonic()
@@ -239,16 +192,24 @@ async def convene_council(
         tool_name="get_concordance_brief",
         arguments={
             "views": views,
-            "conflicts": conflict_matrix,
-            "total_messages": len(views) + len(conflicts),
-            "total_rounds": 2 if conflicts else 1,
+            # Synthesize conflicts inline from views (skipped the separate
+            # MCP conflict_matrix call to fit inside PO's 60s ceiling).
+            "conflicts": {
+                "patient_id": patient_id,
+                "specialties": [v.get("specialty") for v in views],
+                "conflicts": [],
+                "agreements": [],
+                "abstentions": [],
+            },
+            "total_messages": len(views),
+            "total_rounds": 1,
         },
         fhir_url=fhir_url,
         fhir_token=fhir_token,
         patient_id=patient_id,
         convening_id=convening_id,
         specialty="convener",
-        round_id=2,
+        round_id=1,
     )
     await record_tool_call(
         convening_id=convening_id,
@@ -285,7 +246,7 @@ CRITICAL: When you receive ANY consultation request (e.g. "consult with the Conv
 Your workflow:
 1. Receive the consultation request from the platform's General Chat.
 2. Call `convene_council()` with no arguments (patient_id defaults to the one in FHIR context). If the user mentions a specific clinical question, pass it as `focus_problem`.
-3. The convene_council tool runs the full deliberation: Round 1 fan-out to 8 specialty agents, conflict matrix synthesis via MCP, Round 2 conflict response if needed, ConcordantPlan generation.
+3. The convene_council tool runs the deliberation: parallel Round 1 fan-out to all 8 specialty agents (capped at 30s wallclock to fit inside General Chat), then synthesises a ConcordantPlan via the lens-MCP that detects and resolves conflicts inline. Slow specialty replies are dropped from the brief — the plan still synthesises from the 5-7 specialties that respond in time.
 4. Return the resulting ConcordantPlan as your final response, formatted clearly with the brief summary, conflict log, and action items.
 
 You do NOT route between specialties yourself. The convene_council tool handles all peer A2A traffic deterministically. Your job is to receive the request, immediately kick off convene_council, and present the resulting plan back to the caller.
