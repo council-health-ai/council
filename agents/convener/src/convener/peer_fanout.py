@@ -79,8 +79,8 @@ def all_specialty_urls() -> list[tuple[str, str]]:
     ]
 
 
-_MAX_RETRIES_429 = 3
-_RETRY_BACKOFF_BASE_SECONDS = 4.0
+_MAX_RETRIES_429 = 2
+_RETRY_BACKOFF_BASE_SECONDS = 3.0
 
 
 def _looks_like_429(text: str | None) -> bool:
@@ -353,18 +353,17 @@ async def fan_out(
     fhir_metadata: dict[str, Any] | None,
     api_key: str | None = None,
     timeout_seconds: float = 90.0,
-    max_concurrency: int = 2,
+    max_concurrency: int = 8,
 ) -> list[PeerResult]:
     """Send the same/different prompt to multiple peers in parallel. Each peer's url is hit
     via its A2A AgentCard. Returns one PeerResult per call (success or error).
 
-    `max_concurrency` caps how many specialty agents are called simultaneously. We
-    keep this conservative (2) because every peer call wakes a separate Vertex
-    Gemini conversation, and Vertex's per-project per-minute rate limit is
-    triggered when we burst all 8 at once (live-observed 429 RESOURCE_EXHAUSTED
-    on trial-credit projects). Semaphore-bounded fan-out trades a few seconds
-    of wallclock for reliability. Combined with per-peer 429 retry-with-backoff
-    in _call_one_peer, Round 1 stays inside the General Chat 60s timeout.
+    `max_concurrency` defaults to 8 — i.e. fully parallel for the standard
+    Round 1 fan-out. Vertex AI's 60 RPM per-project ceiling for gemini-2.5-flash
+    handles an 8-peer burst cleanly. The earlier 429s were AI Studio prepayment
+    depletion, not Vertex rate-limiting; once GCP_SA_KEY_JSON wires the Spaces
+    to the $300 trial pool, we can burst freely. Per-peer retries in
+    _call_one_peer cover any transient 429s.
     """
     api_key = api_key or settings.peer_api_key
     headers = {"X-API-Key": api_key} if api_key else {}
