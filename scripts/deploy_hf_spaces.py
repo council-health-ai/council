@@ -212,7 +212,28 @@ def stage_agent(name: str, blurb: str) -> Path:
 
 VERTEX_SA_KEY_PATH = Path.home() / ".config/gcloud/keys/council-vertex.json"
 VERTEX_PROJECT = "firm-plexus-363809"
-VERTEX_LOCATION = "us-central1"
+
+# Vertex AI applies per-project, per-region, per-model RPM/TPM quotas. On a
+# trial-credit project the per-region ceiling for gemini-2.5-flash is small,
+# and the Council's burst pattern (Convener → 8 peer agents → MCP brief, all
+# calling Gemini) saturates a single region instantly. Spread services across
+# 10 distinct regions and each gets its own independent quota pool — same
+# project, same trial billing, ~10× the effective burst headroom.
+#
+# All listed regions support gemini-2.5-flash and gemini-2.5-pro
+# (verified against Vertex AI 2026-04-28 region availability docs).
+REGION_BY_SERVICE: dict[str, str] = {
+    "specialty-lens-mcp":   "us-central1",   # MCP brief synthesis (the bottleneck)
+    "convener":             "us-east1",      # Convener orchestration LLM
+    "cardiology":           "us-west1",
+    "oncology":             "us-east4",
+    "nephrology":           "us-south1",
+    "endocrine":            "europe-west1",
+    "obstetrics":           "europe-west4",
+    "pediatrics":           "asia-east1",
+    "psychiatry":           "asia-northeast1",
+    "anesthesia":           "asia-southeast1",
+}
 
 
 def _load_vertex_sa() -> str:
@@ -241,11 +262,15 @@ def common_secrets(env: dict[str, str]) -> dict[str, str]:
     }
 
 
-def common_vars() -> dict[str, str]:
-    """Non-secret env vars wired to every Space — declares the Vertex routing."""
+def common_vars(service_name: str) -> dict[str, str]:
+    """Non-secret env vars wired to every Space — declares the Vertex routing.
+
+    GOOGLE_CLOUD_LOCATION is per-service to spread quota across regions.
+    """
+    location = REGION_BY_SERVICE.get(service_name, "us-central1")
     return {
         "GOOGLE_CLOUD_PROJECT": VERTEX_PROJECT,
-        "GOOGLE_CLOUD_LOCATION": VERTEX_LOCATION,
+        "GOOGLE_CLOUD_LOCATION": location,
         "GOOGLE_GENAI_USE_VERTEXAI": "true",
     }
 
@@ -296,7 +321,7 @@ def agent_env(name: str) -> dict[str, str]:
         "PEDIATRICS_AGENT_URL": PEER_URLS["pediatrics"],
         "PSYCHIATRY_AGENT_URL": PEER_URLS["psychiatry"],
         "ANESTHESIA_AGENT_URL": PEER_URLS["anesthesia"],
-        **common_vars(),
+        **common_vars(name),
     }
 
 
@@ -369,7 +394,7 @@ def main() -> int:
             "GEMINI_MODEL": "gemini-2.5-flash",
             "SHARP_ENFORCE_403": "true",
             "SENTRY_ENVIRONMENT": "production",
-            **common_vars(),
+            **common_vars("specialty-lens-mcp"),
         },
     )
 
