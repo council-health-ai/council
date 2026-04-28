@@ -41,4 +41,9 @@ def make_specialty_a2a_app(*, specialty: Specialty, focus_blurb: str) -> Starlet
         role=specialty,
         skills=skills,
         require_api_key=True,
+        # CRITICAL: specialty agents are called peer-to-peer by the Convener via the
+        # a2a-sdk client, which expects the canonical spec response shape. Reshaping
+        # to PO's envelope breaks that path. Only the Convener (called directly by PO)
+        # should reshape.
+        reshape_response_for_po=False,
     )
