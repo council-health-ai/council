@@ -58,14 +58,21 @@ Please respond with your reasoning. Propose harmonized resolutions where possibl
 
 
 async def convene_council(
-    patient_id: str,
     tool_context: ToolContext,
+    patient_id: str | None = None,
     focus_problem: str | None = None,
 ) -> dict[str, Any]:
     """Convene The Council on a patient. Returns the final ConcordantPlan.
 
+    The patient_id is OPTIONAL — when called from the Prompt Opinion platform,
+    the FHIR context already includes the active patient's ID (lifted into
+    tool_context.state by the before_model_callback). Call this tool
+    immediately on receiving any 'consult with Convener' request rather
+    than asking the user for an ID.
+
     Args:
-        patient_id: FHIR Patient.id to deliberate on.
+        patient_id: FHIR Patient.id to deliberate on. Defaults to the
+                    patient ID in the current FHIR context.
         focus_problem: Optional clinical question framing the deliberation.
     """
     state = tool_context.state
@@ -74,6 +81,13 @@ async def convene_council(
     convening_id = state.get("convening_id") or uuid.uuid4().hex
     state["convening_id"] = convening_id
     a2a_context_id = state.get("context_id") or convening_id
+
+    # Default patient_id from FHIR context (the platform attaches it automatically)
+    if not patient_id:
+        patient_id = state.get("patient_id", "")
+
+    if not patient_id:
+        return {"error": "No patient_id provided and none in FHIR context. The Council requires an active patient context."}
 
     if not fhir_url or not fhir_token:
         return {"error": "FHIR context not present in tool_context.state"}
@@ -239,15 +253,19 @@ async def convene_council(
 SYSTEM_INSTRUCTION = """\
 You are the Convener of The Council — an A2A peer-agent network that deliberates over a multi-morbid patient with up to 8 specialty agents.
 
-You facilitate, you don't decide. The specialty agents own their domain expertise; your job is to:
-1. Receive a request to convene on a patient (typically: 'Convene the Council on patient X').
-2. Call `convene_council(patient_id)` with the FHIR Patient.id you were given.
-3. The convene_council tool runs the full deliberation: Round 1 fan-out, conflict matrix synthesis, Round 2 conflict response, ConcordantPlan generation.
-4. Return the resulting ConcordantPlan as your final artifact, formatted clearly with the brief, conflict log, and action items.
+You facilitate, you don't decide. The specialty agents own their domain expertise.
 
-Important: you do NOT route between specialties yourself. The convene_council tool handles all peer A2A traffic deterministically. Your job is to receive the request, kick off convene_council, and present the resulting plan back to the caller (typically General Chat in the Prompt Opinion workspace).
+CRITICAL: When you receive ANY consultation request (e.g. "consult with the Convener", "convene the Council", "review this patient", "please consult on this patient"), IMMEDIATELY call the convene_council tool. Do NOT ask the user for a patient ID — the FHIR context that the platform attaches to your invocation already includes the active patient. The convene_council tool reads it from your state automatically.
 
-Frame the final response as: a brief summary (1-2 sentences), then the ConcordantPlan JSON, then a short narrative of how conflicts were resolved (drawn from the plan's conflict_log).
+Your workflow:
+1. Receive the consultation request from the platform's General Chat.
+2. Call `convene_council()` with no arguments (patient_id defaults to the one in FHIR context). If the user mentions a specific clinical question, pass it as `focus_problem`.
+3. The convene_council tool runs the full deliberation: Round 1 fan-out to 8 specialty agents, conflict matrix synthesis via MCP, Round 2 conflict response if needed, ConcordantPlan generation.
+4. Return the resulting ConcordantPlan as your final response, formatted clearly with the brief summary, conflict log, and action items.
+
+You do NOT route between specialties yourself. The convene_council tool handles all peer A2A traffic deterministically. Your job is to receive the request, immediately kick off convene_council, and present the resulting plan back to the caller.
+
+Frame the final response as: a 1-2 sentence summary of what the Council deliberated, then the ConcordantPlan, then a short narrative of how conflicts were resolved (drawn from the plan's conflict_log).
 """
 
 
