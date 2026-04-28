@@ -1,0 +1,1087 @@
+{
+  "resourceType": "Bundle",
+  "id": "bundle-mrs-chen",
+  "type": "transaction",
+  "timestamp": "2026-04-27T21:10:37.641641+00:00",
+  "entry": [
+    {
+      "fullUrl": "urn:uuid:patient-chen-67",
+      "resource": {
+        "resourceType": "Patient",
+        "id": "patient-chen-67",
+        "active": true,
+        "name": [
+          {
+            "use": "official",
+            "family": "Chen",
+            "given": [
+              "Susan"
+            ]
+          }
+        ],
+        "gender": "female",
+        "birthDate": "1958-08-04",
+        "address": [
+          {
+            "use": "home",
+            "country": "US"
+          }
+        ],
+        "extension": [
+          {
+            "url": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-race",
+            "extension": [
+              {
+                "url": "text",
+                "valueString": "Synthetic"
+              }
+            ]
+          }
+        ]
+      },
+      "request": {
+        "method": "PUT",
+        "url": "Patient/patient-chen-67"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:enc-chen-onc-2026-04-15",
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-chen-onc-2026-04-15",
+        "status": "finished",
+        "class": {
+          "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+          "code": "AMB",
+          "display": "ambulatory"
+        },
+        "type": [
+          {
+            "coding": [
+              {
+                "system": "http://snomed.info/sct",
+                "code": "11429006",
+                "display": "Consultation"
+              }
+            ],
+            "text": "Consultation"
+          }
+        ],
+        "subject": {
+          "reference": "Patient/patient-chen-67"
+        },
+        "period": {
+          "start": "2026-04-15",
+          "end": "2026-04-15"
+        },
+        "reasonCode": [
+          {
+            "text": "Multidisciplinary review \u2014 newly diagnosed ER+/HER2- invasive ductal carcinoma; co-managing AFib, CKD3, T2DM"
+          }
+        ]
+      },
+      "request": {
+        "method": "PUT",
+        "url": "Encounter/enc-chen-onc-2026-04-15"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:cond-chen-breast-ca",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "cond-chen-breast-ca",
+        "clinicalStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+              "code": "active",
+              "display": "Active"
+            }
+          ],
+          "text": "Active"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "confirmed",
+              "display": "Confirmed"
+            }
+          ],
+          "text": "Confirmed"
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://snomed.info/sct",
+              "code": "254837009",
+              "display": "Malignant neoplasm of breast"
+            }
+          ],
+          "text": "Malignant neoplasm of breast"
+        },
+        "subject": {
+          "reference": "Patient/patient-chen-67"
+        },
+        "onsetDateTime": "2026-02-10",
+        "recordedDate": "2026-02-10",
+        "severity": {
+          "text": "moderate"
+        },
+        "bodySite": [
+          {
+            "coding": [
+              {
+                "system": "http://snomed.info/sct",
+                "code": "76752008",
+                "display": "Breast structure"
+              }
+            ],
+            "text": "Breast structure"
+          }
+        ],
+        "note": [
+          {
+            "text": "Invasive ductal carcinoma, ER+ PR+ HER2-, clinical stage cT2N0M0; lumpectomy planned"
+          }
+        ]
+      },
+      "request": {
+        "method": "PUT",
+        "url": "Condition/cond-chen-breast-ca"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:cond-chen-afib",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "cond-chen-afib",
+        "clinicalStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+              "code": "active",
+              "display": "Active"
+            }
+          ],
+          "text": "Active"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "confirmed",
+              "display": "Confirmed"
+            }
+          ],
+          "text": "Confirmed"
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://snomed.info/sct",
+              "code": "49436004",
+              "display": "Atrial fibrillation"
+            }
+          ],
+          "text": "Atrial fibrillation"
+        },
+        "subject": {
+          "reference": "Patient/patient-chen-67"
+        },
+        "onsetDateTime": "2024-09-22",
+        "recordedDate": "2024-09-22",
+        "note": [
+          {
+            "text": "Paroxysmal AFib; CHA2DS2-VASc 4 (HTN, age, female sex, DM); on apixaban for stroke prevention"
+          }
+        ]
+      },
+      "request": {
+        "method": "PUT",
+        "url": "Condition/cond-chen-afib"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:cond-chen-ckd3",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "cond-chen-ckd3",
+        "clinicalStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+              "code": "active",
+              "display": "Active"
+            }
+          ],
+          "text": "Active"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "confirmed",
+              "display": "Confirmed"
+            }
+          ],
+          "text": "Confirmed"
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://snomed.info/sct",
+              "code": "433144002",
+              "display": "Chronic kidney disease stage 3"
+            }
+          ],
+          "text": "Chronic kidney disease stage 3"
+        },
+        "subject": {
+          "reference": "Patient/patient-chen-67"
+        },
+        "onsetDateTime": "2022-06-03",
+        "recordedDate": "2022-06-03",
+        "note": [
+          {
+            "text": "CKD stage 3a (eGFR 38); etiology likely diabetic + hypertensive nephropathy"
+          }
+        ]
+      },
+      "request": {
+        "method": "PUT",
+        "url": "Condition/cond-chen-ckd3"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:cond-chen-t2dm",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "cond-chen-t2dm",
+        "clinicalStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+              "code": "active",
+              "display": "Active"
+            }
+          ],
+          "text": "Active"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "confirmed",
+              "display": "Confirmed"
+            }
+          ],
+          "text": "Confirmed"
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://snomed.info/sct",
+              "code": "44054006",
+              "display": "Type 2 diabetes mellitus"
+            }
+          ],
+          "text": "Type 2 diabetes mellitus"
+        },
+        "subject": {
+          "reference": "Patient/patient-chen-67"
+        },
+        "onsetDateTime": "2018-11-12",
+        "recordedDate": "2018-11-12",
+        "note": [
+          {
+            "text": "Currently uncontrolled (HbA1c 9.2%); intensification indicated"
+          }
+        ]
+      },
+      "request": {
+        "method": "PUT",
+        "url": "Condition/cond-chen-t2dm"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:cond-chen-htn",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "cond-chen-htn",
+        "clinicalStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+              "code": "active",
+              "display": "Active"
+            }
+          ],
+          "text": "Active"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "confirmed",
+              "display": "Confirmed"
+            }
+          ],
+          "text": "Confirmed"
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://snomed.info/sct",
+              "code": "38341003",
+              "display": "Hypertensive disorder"
+            }
+          ],
+          "text": "Hypertensive disorder"
+        },
+        "subject": {
+          "reference": "Patient/patient-chen-67"
+        },
+        "onsetDateTime": "2015-03-01",
+        "recordedDate": "2015-03-01"
+      },
+      "request": {
+        "method": "PUT",
+        "url": "Condition/cond-chen-htn"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:med-chen-apixaban",
+      "resource": {
+        "resourceType": "MedicationStatement",
+        "id": "med-chen-apixaban",
+        "status": "active",
+        "medicationCodeableConcept": {
+          "coding": [
+            {
+              "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+              "code": "1364430",
+              "display": "Apixaban 5 MG Oral Tablet"
+            }
+          ],
+          "text": "Apixaban 5 MG Oral Tablet"
+        },
+        "subject": {
+          "reference": "Patient/patient-chen-67"
+        },
+        "effectiveDateTime": "2024-09-22",
+        "dateAsserted": "2024-09-22",
+        "dosage": [
+          {
+            "text": "5 mg oral BID",
+            "route": {
+              "coding": [
+                {
+                  "system": "http://snomed.info/sct",
+                  "code": "26643006",
+                  "display": "Oral route"
+                }
+              ],
+              "text": "Oral route"
+            }
+          }
+        ],
+        "reasonCode": [
+          {
+            "text": "AFib stroke prevention (CHA2DS2-VASc 4). Dose: 5 mg BID \u2014 does not meet \u22652 of 3 reduction criteria (age \u226580, weight \u226460 kg, SCr \u22651.5)."
+          }
+        ]
+      },
+      "request": {
+        "method": "PUT",
+        "url": "MedicationStatement/med-chen-apixaban"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:med-chen-metformin",
+      "resource": {
+        "resourceType": "MedicationStatement",
+        "id": "med-chen-metformin",
+        "status": "active",
+        "medicationCodeableConcept": {
+          "coding": [
+            {
+              "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+              "code": "860975",
+              "display": "Metformin Hydrochloride 1000 MG Oral Tablet"
+            }
+          ],
+          "text": "Metformin Hydrochloride 1000 MG Oral Tablet"
+        },
+        "subject": {
+          "reference": "Patient/patient-chen-67"
+        },
+        "effectiveDateTime": "2018-11-12",
+        "dateAsserted": "2018-11-12",
+        "dosage": [
+          {
+            "text": "1000 mg oral BID",
+            "route": {
+              "coding": [
+                {
+                  "system": "http://snomed.info/sct",
+                  "code": "26643006",
+                  "display": "Oral route"
+                }
+              ],
+              "text": "Oral route"
+            }
+          }
+        ],
+        "reasonCode": [
+          {
+            "text": "T2DM glycemic control"
+          }
+        ]
+      },
+      "request": {
+        "method": "PUT",
+        "url": "MedicationStatement/med-chen-metformin"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:med-chen-empagliflozin",
+      "resource": {
+        "resourceType": "MedicationStatement",
+        "id": "med-chen-empagliflozin",
+        "status": "active",
+        "medicationCodeableConcept": {
+          "coding": [
+            {
+              "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+              "code": "1545653",
+              "display": "Empagliflozin 10 MG Oral Tablet"
+            }
+          ],
+          "text": "Empagliflozin 10 MG Oral Tablet"
+        },
+        "subject": {
+          "reference": "Patient/patient-chen-67"
+        },
+        "effectiveDateTime": "2024-01-15",
+        "dateAsserted": "2024-01-15",
+        "dosage": [
+          {
+            "text": "10 mg oral QD",
+            "route": {
+              "coding": [
+                {
+                  "system": "http://snomed.info/sct",
+                  "code": "26643006",
+                  "display": "Oral route"
+                }
+              ],
+              "text": "Oral route"
+            }
+          }
+        ],
+        "reasonCode": [
+          {
+            "text": "T2DM + cardio-renal protection (CKD3 + AFib)"
+          }
+        ]
+      },
+      "request": {
+        "method": "PUT",
+        "url": "MedicationStatement/med-chen-empagliflozin"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:med-chen-lisinopril",
+      "resource": {
+        "resourceType": "MedicationStatement",
+        "id": "med-chen-lisinopril",
+        "status": "active",
+        "medicationCodeableConcept": {
+          "coding": [
+            {
+              "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+              "code": "314076",
+              "display": "Lisinopril 10 MG Oral Tablet"
+            }
+          ],
+          "text": "Lisinopril 10 MG Oral Tablet"
+        },
+        "subject": {
+          "reference": "Patient/patient-chen-67"
+        },
+        "effectiveDateTime": "2015-04-01",
+        "dateAsserted": "2015-04-01",
+        "dosage": [
+          {
+            "text": "10 mg oral QD",
+            "route": {
+              "coding": [
+                {
+                  "system": "http://snomed.info/sct",
+                  "code": "26643006",
+                  "display": "Oral route"
+                }
+              ],
+              "text": "Oral route"
+            }
+          }
+        ],
+        "reasonCode": [
+          {
+            "text": "HTN + CKD nephroprotection"
+          }
+        ]
+      },
+      "request": {
+        "method": "PUT",
+        "url": "MedicationStatement/med-chen-lisinopril"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:med-chen-atorvastatin",
+      "resource": {
+        "resourceType": "MedicationStatement",
+        "id": "med-chen-atorvastatin",
+        "status": "active",
+        "medicationCodeableConcept": {
+          "coding": [
+            {
+              "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+              "code": "617310",
+              "display": "Atorvastatin 40 MG Oral Tablet"
+            }
+          ],
+          "text": "Atorvastatin 40 MG Oral Tablet"
+        },
+        "subject": {
+          "reference": "Patient/patient-chen-67"
+        },
+        "effectiveDateTime": "2019-08-12",
+        "dateAsserted": "2019-08-12",
+        "dosage": [
+          {
+            "text": "40 mg oral QD",
+            "route": {
+              "coding": [
+                {
+                  "system": "http://snomed.info/sct",
+                  "code": "26643006",
+                  "display": "Oral route"
+                }
+              ],
+              "text": "Oral route"
+            }
+          }
+        ],
+        "reasonCode": [
+          {
+            "text": "ASCVD primary prevention"
+          }
+        ]
+      },
+      "request": {
+        "method": "PUT",
+        "url": "MedicationStatement/med-chen-atorvastatin"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:obs-chen-hba1c",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "obs-chen-hba1c",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory",
+                "display": "Laboratory"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "4548-4",
+              "display": "Hemoglobin A1c"
+            }
+          ],
+          "text": "Hemoglobin A1c"
+        },
+        "subject": {
+          "reference": "Patient/patient-chen-67"
+        },
+        "effectiveDateTime": "2026-04-10",
+        "valueQuantity": {
+          "value": 9.2,
+          "unit": "%",
+          "system": "http://unitsofmeasure.org",
+          "code": "%"
+        },
+        "interpretation": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation",
+                "code": "H",
+                "display": "H"
+              }
+            ],
+            "text": "H"
+          }
+        ]
+      },
+      "request": {
+        "method": "PUT",
+        "url": "Observation/obs-chen-hba1c"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:obs-chen-egfr",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "obs-chen-egfr",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory",
+                "display": "Laboratory"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "48642-3",
+              "display": "Glomerular filtration rate predicted (CKD-EPI)"
+            }
+          ],
+          "text": "Glomerular filtration rate predicted (CKD-EPI)"
+        },
+        "subject": {
+          "reference": "Patient/patient-chen-67"
+        },
+        "effectiveDateTime": "2026-04-10",
+        "valueQuantity": {
+          "value": 38.0,
+          "unit": "mL/min/1.73m2",
+          "system": "http://unitsofmeasure.org",
+          "code": "mL/min/{1.73_m2}"
+        },
+        "interpretation": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation",
+                "code": "L",
+                "display": "L"
+              }
+            ],
+            "text": "L"
+          }
+        ]
+      },
+      "request": {
+        "method": "PUT",
+        "url": "Observation/obs-chen-egfr"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:obs-chen-creatinine",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "obs-chen-creatinine",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory",
+                "display": "Laboratory"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "2160-0",
+              "display": "Creatinine [Mass/volume] in Serum or Plasma"
+            }
+          ],
+          "text": "Creatinine [Mass/volume] in Serum or Plasma"
+        },
+        "subject": {
+          "reference": "Patient/patient-chen-67"
+        },
+        "effectiveDateTime": "2026-04-10",
+        "valueQuantity": {
+          "value": 1.4,
+          "unit": "mg/dL",
+          "system": "http://unitsofmeasure.org",
+          "code": "mg/dL"
+        },
+        "interpretation": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation",
+                "code": "H",
+                "display": "H"
+              }
+            ],
+            "text": "H"
+          }
+        ]
+      },
+      "request": {
+        "method": "PUT",
+        "url": "Observation/obs-chen-creatinine"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:obs-chen-bun",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "obs-chen-bun",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory",
+                "display": "Laboratory"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "3094-0",
+              "display": "Urea nitrogen [Mass/volume] in Serum or Plasma"
+            }
+          ],
+          "text": "Urea nitrogen [Mass/volume] in Serum or Plasma"
+        },
+        "subject": {
+          "reference": "Patient/patient-chen-67"
+        },
+        "effectiveDateTime": "2026-04-10",
+        "valueQuantity": {
+          "value": 25.0,
+          "unit": "mg/dL",
+          "system": "http://unitsofmeasure.org",
+          "code": "mg/dL"
+        }
+      },
+      "request": {
+        "method": "PUT",
+        "url": "Observation/obs-chen-bun"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:obs-chen-potassium",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "obs-chen-potassium",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory",
+                "display": "Laboratory"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "2823-3",
+              "display": "Potassium [Moles/volume] in Serum or Plasma"
+            }
+          ],
+          "text": "Potassium [Moles/volume] in Serum or Plasma"
+        },
+        "subject": {
+          "reference": "Patient/patient-chen-67"
+        },
+        "effectiveDateTime": "2026-04-10",
+        "valueQuantity": {
+          "value": 4.4,
+          "unit": "mmol/L",
+          "system": "http://unitsofmeasure.org",
+          "code": "mmol/L"
+        }
+      },
+      "request": {
+        "method": "PUT",
+        "url": "Observation/obs-chen-potassium"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:obs-chen-bp-sys",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "obs-chen-bp-sys",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "vital-signs",
+                "display": "Vital-signs"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "8480-6",
+              "display": "Systolic blood pressure"
+            }
+          ],
+          "text": "Systolic blood pressure"
+        },
+        "subject": {
+          "reference": "Patient/patient-chen-67"
+        },
+        "effectiveDateTime": "2026-04-15",
+        "valueQuantity": {
+          "value": 138,
+          "unit": "mmHg",
+          "system": "http://unitsofmeasure.org",
+          "code": "mm[Hg]"
+        }
+      },
+      "request": {
+        "method": "PUT",
+        "url": "Observation/obs-chen-bp-sys"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:obs-chen-bp-dia",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "obs-chen-bp-dia",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "vital-signs",
+                "display": "Vital-signs"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "8462-4",
+              "display": "Diastolic blood pressure"
+            }
+          ],
+          "text": "Diastolic blood pressure"
+        },
+        "subject": {
+          "reference": "Patient/patient-chen-67"
+        },
+        "effectiveDateTime": "2026-04-15",
+        "valueQuantity": {
+          "value": 78,
+          "unit": "mmHg",
+          "system": "http://unitsofmeasure.org",
+          "code": "mm[Hg]"
+        }
+      },
+      "request": {
+        "method": "PUT",
+        "url": "Observation/obs-chen-bp-dia"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:obs-chen-weight",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "obs-chen-weight",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "vital-signs",
+                "display": "Vital-signs"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "29463-7",
+              "display": "Body weight"
+            }
+          ],
+          "text": "Body weight"
+        },
+        "subject": {
+          "reference": "Patient/patient-chen-67"
+        },
+        "effectiveDateTime": "2026-04-15",
+        "valueQuantity": {
+          "value": 72.0,
+          "unit": "kg",
+          "system": "http://unitsofmeasure.org",
+          "code": "kg"
+        }
+      },
+      "request": {
+        "method": "PUT",
+        "url": "Observation/obs-chen-weight"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:obs-chen-er",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "obs-chen-er",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "16113-3",
+              "display": "Estrogen receptor in Tissue"
+            }
+          ],
+          "text": "Estrogen receptor in Tissue"
+        },
+        "subject": {
+          "reference": "Patient/patient-chen-67"
+        },
+        "effectiveDateTime": "2026-02-10",
+        "valueCodeableConcept": {
+          "coding": [
+            {
+              "system": "http://snomed.info/sct",
+              "code": "416053008",
+              "display": "Oestrogen receptor positive"
+            }
+          ],
+          "text": "Oestrogen receptor positive"
+        }
+      },
+      "request": {
+        "method": "PUT",
+        "url": "Observation/obs-chen-er"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:obs-chen-her2",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "obs-chen-her2",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "48676-1",
+              "display": "HER2 [Interpretation] in Tissue"
+            }
+          ],
+          "text": "HER2 [Interpretation] in Tissue"
+        },
+        "subject": {
+          "reference": "Patient/patient-chen-67"
+        },
+        "effectiveDateTime": "2026-02-10",
+        "valueCodeableConcept": {
+          "coding": [
+            {
+              "system": "http://snomed.info/sct",
+              "code": "260385009",
+              "display": "Negative"
+            }
+          ],
+          "text": "Negative"
+        }
+      },
+      "request": {
+        "method": "PUT",
+        "url": "Observation/obs-chen-her2"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:proc-chen-core-bx",
+      "resource": {
+        "resourceType": "Procedure",
+        "id": "proc-chen-core-bx",
+        "status": "completed",
+        "code": {
+          "coding": [
+            {
+              "system": "http://snomed.info/sct",
+              "code": "122548005",
+              "display": "Core needle biopsy of breast"
+            }
+          ],
+          "text": "Core needle biopsy of breast"
+        },
+        "subject": {
+          "reference": "Patient/patient-chen-67"
+        },
+        "performedDateTime": "2026-02-10"
+      },
+      "request": {
+        "method": "PUT",
+        "url": "Procedure/proc-chen-core-bx"
+      }
+    }
+  ]
+}

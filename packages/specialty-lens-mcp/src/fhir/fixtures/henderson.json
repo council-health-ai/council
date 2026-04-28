@@ -1,0 +1,1210 @@
+{
+  "resourceType": "Bundle",
+  "id": "bundle-henderson",
+  "type": "transaction",
+  "timestamp": "2026-04-27T21:10:37.642600+00:00",
+  "entry": [
+    {
+      "fullUrl": "urn:uuid:patient-henderson-78",
+      "resource": {
+        "resourceType": "Patient",
+        "id": "patient-henderson-78",
+        "active": true,
+        "name": [
+          {
+            "use": "official",
+            "family": "Henderson",
+            "given": [
+              "Robert"
+            ]
+          }
+        ],
+        "gender": "male",
+        "birthDate": "1947-11-30",
+        "address": [
+          {
+            "use": "home",
+            "country": "US"
+          }
+        ],
+        "extension": [
+          {
+            "url": "http://hl7.org/fhir/us/core/StructureDefinition/us-core-race",
+            "extension": [
+              {
+                "url": "text",
+                "valueString": "Synthetic"
+              }
+            ]
+          }
+        ]
+      },
+      "request": {
+        "method": "PUT",
+        "url": "Patient/patient-henderson-78"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:enc-henderson-pcp-2026-04",
+      "resource": {
+        "resourceType": "Encounter",
+        "id": "enc-henderson-pcp-2026-04",
+        "status": "finished",
+        "class": {
+          "system": "http://terminology.hl7.org/CodeSystem/v3-ActCode",
+          "code": "AMB",
+          "display": "ambulatory"
+        },
+        "type": [
+          {
+            "coding": [
+              {
+                "system": "http://snomed.info/sct",
+                "code": "11429006",
+                "display": "Consultation"
+              }
+            ],
+            "text": "Consultation"
+          }
+        ],
+        "subject": {
+          "reference": "Patient/patient-henderson-78"
+        },
+        "period": {
+          "start": "2026-04-22",
+          "end": "2026-04-22"
+        },
+        "reasonCode": [
+          {
+            "text": "Geriatric medication review \u2014 symptomatic falls, suspected polypharmacy"
+          }
+        ]
+      },
+      "request": {
+        "method": "PUT",
+        "url": "Encounter/enc-henderson-pcp-2026-04"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:cond-henderson-hfref",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "cond-henderson-hfref",
+        "clinicalStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+              "code": "active",
+              "display": "Active"
+            }
+          ],
+          "text": "Active"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "confirmed",
+              "display": "Confirmed"
+            }
+          ],
+          "text": "Confirmed"
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://snomed.info/sct",
+              "code": "84114007",
+              "display": "Heart failure"
+            }
+          ],
+          "text": "Heart failure"
+        },
+        "subject": {
+          "reference": "Patient/patient-henderson-78"
+        },
+        "onsetDateTime": "2018-02-10",
+        "recordedDate": "2018-02-10",
+        "note": [
+          {
+            "text": "HFrEF, ischemic etiology. Last echo EF 35%. NYHA class II."
+          }
+        ]
+      },
+      "request": {
+        "method": "PUT",
+        "url": "Condition/cond-henderson-hfref"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:cond-henderson-copd",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "cond-henderson-copd",
+        "clinicalStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+              "code": "active",
+              "display": "Active"
+            }
+          ],
+          "text": "Active"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "confirmed",
+              "display": "Confirmed"
+            }
+          ],
+          "text": "Confirmed"
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://snomed.info/sct",
+              "code": "13645005",
+              "display": "Chronic obstructive lung disease"
+            }
+          ],
+          "text": "Chronic obstructive lung disease"
+        },
+        "subject": {
+          "reference": "Patient/patient-henderson-78"
+        },
+        "onsetDateTime": "2015-08-01",
+        "recordedDate": "2015-08-01",
+        "note": [
+          {
+            "text": "GOLD group B (mMRC 2). Last FEV1 55% predicted."
+          }
+        ]
+      },
+      "request": {
+        "method": "PUT",
+        "url": "Condition/cond-henderson-copd"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:cond-henderson-ckd3",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "cond-henderson-ckd3",
+        "clinicalStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+              "code": "active",
+              "display": "Active"
+            }
+          ],
+          "text": "Active"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "confirmed",
+              "display": "Confirmed"
+            }
+          ],
+          "text": "Confirmed"
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://snomed.info/sct",
+              "code": "433144002",
+              "display": "Chronic kidney disease stage 3"
+            }
+          ],
+          "text": "Chronic kidney disease stage 3"
+        },
+        "subject": {
+          "reference": "Patient/patient-henderson-78"
+        },
+        "onsetDateTime": "2020-01-15",
+        "recordedDate": "2020-01-15",
+        "note": [
+          {
+            "text": "CKD 3b (eGFR 38). Etiology likely cardiorenal + age-related."
+          }
+        ]
+      },
+      "request": {
+        "method": "PUT",
+        "url": "Condition/cond-henderson-ckd3"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:cond-henderson-pd",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "cond-henderson-pd",
+        "clinicalStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+              "code": "active",
+              "display": "Active"
+            }
+          ],
+          "text": "Active"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "confirmed",
+              "display": "Confirmed"
+            }
+          ],
+          "text": "Confirmed"
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://snomed.info/sct",
+              "code": "49049000",
+              "display": "Parkinson's disease"
+            }
+          ],
+          "text": "Parkinson's disease"
+        },
+        "subject": {
+          "reference": "Patient/patient-henderson-78"
+        },
+        "onsetDateTime": "2021-09-04",
+        "recordedDate": "2021-09-04",
+        "note": [
+          {
+            "text": "Hoehn & Yahr 2. Tremor-predominant."
+          }
+        ]
+      },
+      "request": {
+        "method": "PUT",
+        "url": "Condition/cond-henderson-pd"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:cond-henderson-depression",
+      "resource": {
+        "resourceType": "Condition",
+        "id": "cond-henderson-depression",
+        "clinicalStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-clinical",
+              "code": "active",
+              "display": "Active"
+            }
+          ],
+          "text": "Active"
+        },
+        "verificationStatus": {
+          "coding": [
+            {
+              "system": "http://terminology.hl7.org/CodeSystem/condition-ver-status",
+              "code": "confirmed",
+              "display": "Confirmed"
+            }
+          ],
+          "text": "Confirmed"
+        },
+        "code": {
+          "coding": [
+            {
+              "system": "http://snomed.info/sct",
+              "code": "370143000",
+              "display": "Major depressive disorder"
+            }
+          ],
+          "text": "Major depressive disorder"
+        },
+        "subject": {
+          "reference": "Patient/patient-henderson-78"
+        },
+        "onsetDateTime": "2022-06-01",
+        "recordedDate": "2022-06-01",
+        "note": [
+          {
+            "text": "Recurrent. PHQ-9 last visit: 14 (moderate)."
+          }
+        ]
+      },
+      "request": {
+        "method": "PUT",
+        "url": "Condition/cond-henderson-depression"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:med-henderson-0",
+      "resource": {
+        "resourceType": "MedicationStatement",
+        "id": "med-henderson-0",
+        "status": "active",
+        "medicationCodeableConcept": {
+          "coding": [
+            {
+              "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+              "code": "1659149",
+              "display": "Metoprolol Succinate 50 MG Extended Release Oral Tablet"
+            }
+          ],
+          "text": "Metoprolol Succinate 50 MG Extended Release Oral Tablet"
+        },
+        "subject": {
+          "reference": "Patient/patient-henderson-78"
+        },
+        "effectiveDateTime": "2018-03-01",
+        "dateAsserted": "2018-03-01",
+        "dosage": [
+          {
+            "text": "50 mg oral QD",
+            "route": {
+              "coding": [
+                {
+                  "system": "http://snomed.info/sct",
+                  "code": "26643006",
+                  "display": "Oral route"
+                }
+              ],
+              "text": "Oral route"
+            }
+          }
+        ],
+        "reasonCode": [
+          {
+            "text": "HFrEF"
+          }
+        ]
+      },
+      "request": {
+        "method": "PUT",
+        "url": "MedicationStatement/med-henderson-0"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:med-henderson-1",
+      "resource": {
+        "resourceType": "MedicationStatement",
+        "id": "med-henderson-1",
+        "status": "active",
+        "medicationCodeableConcept": {
+          "coding": [
+            {
+              "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+              "code": "314076",
+              "display": "Lisinopril 10 MG Oral Tablet"
+            }
+          ],
+          "text": "Lisinopril 10 MG Oral Tablet"
+        },
+        "subject": {
+          "reference": "Patient/patient-henderson-78"
+        },
+        "effectiveDateTime": "2018-03-01",
+        "dateAsserted": "2018-03-01",
+        "dosage": [
+          {
+            "text": "10 mg oral QD",
+            "route": {
+              "coding": [
+                {
+                  "system": "http://snomed.info/sct",
+                  "code": "26643006",
+                  "display": "Oral route"
+                }
+              ],
+              "text": "Oral route"
+            }
+          }
+        ],
+        "reasonCode": [
+          {
+            "text": "HFrEF + HTN"
+          }
+        ]
+      },
+      "request": {
+        "method": "PUT",
+        "url": "MedicationStatement/med-henderson-1"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:med-henderson-2",
+      "resource": {
+        "resourceType": "MedicationStatement",
+        "id": "med-henderson-2",
+        "status": "active",
+        "medicationCodeableConcept": {
+          "coding": [
+            {
+              "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+              "code": "315231",
+              "display": "Furosemide 40 MG Oral Tablet"
+            }
+          ],
+          "text": "Furosemide 40 MG Oral Tablet"
+        },
+        "subject": {
+          "reference": "Patient/patient-henderson-78"
+        },
+        "effectiveDateTime": "2018-04-01",
+        "dateAsserted": "2018-04-01",
+        "dosage": [
+          {
+            "text": "40 mg oral QD",
+            "route": {
+              "coding": [
+                {
+                  "system": "http://snomed.info/sct",
+                  "code": "26643006",
+                  "display": "Oral route"
+                }
+              ],
+              "text": "Oral route"
+            }
+          }
+        ],
+        "reasonCode": [
+          {
+            "text": "HFrEF volume management"
+          }
+        ]
+      },
+      "request": {
+        "method": "PUT",
+        "url": "MedicationStatement/med-henderson-2"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:med-henderson-3",
+      "resource": {
+        "resourceType": "MedicationStatement",
+        "id": "med-henderson-3",
+        "status": "active",
+        "medicationCodeableConcept": {
+          "coding": [
+            {
+              "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+              "code": "310429",
+              "display": "Spironolactone 25 MG Oral Tablet"
+            }
+          ],
+          "text": "Spironolactone 25 MG Oral Tablet"
+        },
+        "subject": {
+          "reference": "Patient/patient-henderson-78"
+        },
+        "effectiveDateTime": "2019-06-15",
+        "dateAsserted": "2019-06-15",
+        "dosage": [
+          {
+            "text": "25 mg oral QD",
+            "route": {
+              "coding": [
+                {
+                  "system": "http://snomed.info/sct",
+                  "code": "26643006",
+                  "display": "Oral route"
+                }
+              ],
+              "text": "Oral route"
+            }
+          }
+        ],
+        "reasonCode": [
+          {
+            "text": "HFrEF \u2014 mineralocorticoid antagonist"
+          }
+        ]
+      },
+      "request": {
+        "method": "PUT",
+        "url": "MedicationStatement/med-henderson-3"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:med-henderson-4",
+      "resource": {
+        "resourceType": "MedicationStatement",
+        "id": "med-henderson-4",
+        "status": "active",
+        "medicationCodeableConcept": {
+          "coding": [
+            {
+              "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+              "code": "617310",
+              "display": "Atorvastatin 40 MG Oral Tablet"
+            }
+          ],
+          "text": "Atorvastatin 40 MG Oral Tablet"
+        },
+        "subject": {
+          "reference": "Patient/patient-henderson-78"
+        },
+        "effectiveDateTime": "2018-03-01",
+        "dateAsserted": "2018-03-01",
+        "dosage": [
+          {
+            "text": "40 mg oral QD",
+            "route": {
+              "coding": [
+                {
+                  "system": "http://snomed.info/sct",
+                  "code": "26643006",
+                  "display": "Oral route"
+                }
+              ],
+              "text": "Oral route"
+            }
+          }
+        ],
+        "reasonCode": [
+          {
+            "text": "ASCVD secondary prevention"
+          }
+        ]
+      },
+      "request": {
+        "method": "PUT",
+        "url": "MedicationStatement/med-henderson-4"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:med-henderson-5",
+      "resource": {
+        "resourceType": "MedicationStatement",
+        "id": "med-henderson-5",
+        "status": "active",
+        "medicationCodeableConcept": {
+          "coding": [
+            {
+              "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+              "code": "243670",
+              "display": "Aspirin 81 MG Oral Tablet"
+            }
+          ],
+          "text": "Aspirin 81 MG Oral Tablet"
+        },
+        "subject": {
+          "reference": "Patient/patient-henderson-78"
+        },
+        "effectiveDateTime": "2018-03-01",
+        "dateAsserted": "2018-03-01",
+        "dosage": [
+          {
+            "text": "81 mg oral QD",
+            "route": {
+              "coding": [
+                {
+                  "system": "http://snomed.info/sct",
+                  "code": "26643006",
+                  "display": "Oral route"
+                }
+              ],
+              "text": "Oral route"
+            }
+          }
+        ],
+        "reasonCode": [
+          {
+            "text": "ASCVD secondary prevention"
+          }
+        ]
+      },
+      "request": {
+        "method": "PUT",
+        "url": "MedicationStatement/med-henderson-5"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:med-henderson-6",
+      "resource": {
+        "resourceType": "MedicationStatement",
+        "id": "med-henderson-6",
+        "status": "active",
+        "medicationCodeableConcept": {
+          "coding": [
+            {
+              "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+              "code": "746763",
+              "display": "Tiotropium 0.018 MG Inhalation Powder"
+            }
+          ],
+          "text": "Tiotropium 0.018 MG Inhalation Powder"
+        },
+        "subject": {
+          "reference": "Patient/patient-henderson-78"
+        },
+        "effectiveDateTime": "2015-09-01",
+        "dateAsserted": "2015-09-01",
+        "dosage": [
+          {
+            "text": "1 puff oral QD",
+            "route": {
+              "coding": [
+                {
+                  "system": "http://snomed.info/sct",
+                  "code": "26643006",
+                  "display": "Oral route"
+                }
+              ],
+              "text": "Oral route"
+            }
+          }
+        ],
+        "reasonCode": [
+          {
+            "text": "COPD"
+          }
+        ]
+      },
+      "request": {
+        "method": "PUT",
+        "url": "MedicationStatement/med-henderson-6"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:med-henderson-7",
+      "resource": {
+        "resourceType": "MedicationStatement",
+        "id": "med-henderson-7",
+        "status": "active",
+        "medicationCodeableConcept": {
+          "coding": [
+            {
+              "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+              "code": "1190795",
+              "display": "Albuterol 90 MCG/Actuation Metered Dose Inhaler"
+            }
+          ],
+          "text": "Albuterol 90 MCG/Actuation Metered Dose Inhaler"
+        },
+        "subject": {
+          "reference": "Patient/patient-henderson-78"
+        },
+        "effectiveDateTime": "2015-09-01",
+        "dateAsserted": "2015-09-01",
+        "dosage": [
+          {
+            "text": "2 puffs oral PRN",
+            "route": {
+              "coding": [
+                {
+                  "system": "http://snomed.info/sct",
+                  "code": "26643006",
+                  "display": "Oral route"
+                }
+              ],
+              "text": "Oral route"
+            }
+          }
+        ],
+        "reasonCode": [
+          {
+            "text": "COPD rescue"
+          }
+        ]
+      },
+      "request": {
+        "method": "PUT",
+        "url": "MedicationStatement/med-henderson-7"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:med-henderson-8",
+      "resource": {
+        "resourceType": "MedicationStatement",
+        "id": "med-henderson-8",
+        "status": "active",
+        "medicationCodeableConcept": {
+          "coding": [
+            {
+              "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+              "code": "905395",
+              "display": "Carbidopa-Levodopa 25/100 MG Oral Tablet"
+            }
+          ],
+          "text": "Carbidopa-Levodopa 25/100 MG Oral Tablet"
+        },
+        "subject": {
+          "reference": "Patient/patient-henderson-78"
+        },
+        "effectiveDateTime": "2021-10-01",
+        "dateAsserted": "2021-10-01",
+        "dosage": [
+          {
+            "text": "1 tab oral TID",
+            "route": {
+              "coding": [
+                {
+                  "system": "http://snomed.info/sct",
+                  "code": "26643006",
+                  "display": "Oral route"
+                }
+              ],
+              "text": "Oral route"
+            }
+          }
+        ],
+        "reasonCode": [
+          {
+            "text": "Parkinson's disease"
+          }
+        ]
+      },
+      "request": {
+        "method": "PUT",
+        "url": "MedicationStatement/med-henderson-8"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:med-henderson-9",
+      "resource": {
+        "resourceType": "MedicationStatement",
+        "id": "med-henderson-9",
+        "status": "active",
+        "medicationCodeableConcept": {
+          "coding": [
+            {
+              "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+              "code": "314231",
+              "display": "Sertraline 50 MG Oral Tablet"
+            }
+          ],
+          "text": "Sertraline 50 MG Oral Tablet"
+        },
+        "subject": {
+          "reference": "Patient/patient-henderson-78"
+        },
+        "effectiveDateTime": "2022-06-15",
+        "dateAsserted": "2022-06-15",
+        "dosage": [
+          {
+            "text": "50 mg oral QD",
+            "route": {
+              "coding": [
+                {
+                  "system": "http://snomed.info/sct",
+                  "code": "26643006",
+                  "display": "Oral route"
+                }
+              ],
+              "text": "Oral route"
+            }
+          }
+        ],
+        "reasonCode": [
+          {
+            "text": "Major depression"
+          }
+        ]
+      },
+      "request": {
+        "method": "PUT",
+        "url": "MedicationStatement/med-henderson-9"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:med-henderson-10",
+      "resource": {
+        "resourceType": "MedicationStatement",
+        "id": "med-henderson-10",
+        "status": "active",
+        "medicationCodeableConcept": {
+          "coding": [
+            {
+              "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+              "code": "197361",
+              "display": "Cholecalciferol 1000 UNT Oral Tablet"
+            }
+          ],
+          "text": "Cholecalciferol 1000 UNT Oral Tablet"
+        },
+        "subject": {
+          "reference": "Patient/patient-henderson-78"
+        },
+        "effectiveDateTime": "2020-01-01",
+        "dateAsserted": "2020-01-01",
+        "dosage": [
+          {
+            "text": "1000 IU oral QD",
+            "route": {
+              "coding": [
+                {
+                  "system": "http://snomed.info/sct",
+                  "code": "26643006",
+                  "display": "Oral route"
+                }
+              ],
+              "text": "Oral route"
+            }
+          }
+        ],
+        "reasonCode": [
+          {
+            "text": "Vitamin D supplementation"
+          }
+        ]
+      },
+      "request": {
+        "method": "PUT",
+        "url": "MedicationStatement/med-henderson-10"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:med-henderson-11",
+      "resource": {
+        "resourceType": "MedicationStatement",
+        "id": "med-henderson-11",
+        "status": "active",
+        "medicationCodeableConcept": {
+          "coding": [
+            {
+              "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+              "code": "198211",
+              "display": "Pantoprazole 40 MG Oral Tablet"
+            }
+          ],
+          "text": "Pantoprazole 40 MG Oral Tablet"
+        },
+        "subject": {
+          "reference": "Patient/patient-henderson-78"
+        },
+        "effectiveDateTime": "2019-04-01",
+        "dateAsserted": "2019-04-01",
+        "dosage": [
+          {
+            "text": "40 mg oral QD",
+            "route": {
+              "coding": [
+                {
+                  "system": "http://snomed.info/sct",
+                  "code": "26643006",
+                  "display": "Oral route"
+                }
+              ],
+              "text": "Oral route"
+            }
+          }
+        ],
+        "reasonCode": [
+          {
+            "text": "GERD"
+          }
+        ]
+      },
+      "request": {
+        "method": "PUT",
+        "url": "MedicationStatement/med-henderson-11"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:med-henderson-12",
+      "resource": {
+        "resourceType": "MedicationStatement",
+        "id": "med-henderson-12",
+        "status": "active",
+        "medicationCodeableConcept": {
+          "coding": [
+            {
+              "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+              "code": "197531",
+              "display": "Cyclobenzaprine 5 MG Oral Tablet"
+            }
+          ],
+          "text": "Cyclobenzaprine 5 MG Oral Tablet"
+        },
+        "subject": {
+          "reference": "Patient/patient-henderson-78"
+        },
+        "effectiveDateTime": "2024-08-01",
+        "dateAsserted": "2024-08-01",
+        "dosage": [
+          {
+            "text": "5 mg oral QHS",
+            "route": {
+              "coding": [
+                {
+                  "system": "http://snomed.info/sct",
+                  "code": "26643006",
+                  "display": "Oral route"
+                }
+              ],
+              "text": "Oral route"
+            }
+          }
+        ],
+        "reasonCode": [
+          {
+            "text": "Musculoskeletal pain (FLAGGED \u2014 Beers list in elderly)"
+          }
+        ]
+      },
+      "request": {
+        "method": "PUT",
+        "url": "MedicationStatement/med-henderson-12"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:med-henderson-13",
+      "resource": {
+        "resourceType": "MedicationStatement",
+        "id": "med-henderson-13",
+        "status": "active",
+        "medicationCodeableConcept": {
+          "coding": [
+            {
+              "system": "http://www.nlm.nih.gov/research/umls/rxnorm",
+              "code": "197590",
+              "display": "Diphenhydramine 25 MG Oral Tablet"
+            }
+          ],
+          "text": "Diphenhydramine 25 MG Oral Tablet"
+        },
+        "subject": {
+          "reference": "Patient/patient-henderson-78"
+        },
+        "effectiveDateTime": "2024-08-01",
+        "dateAsserted": "2024-08-01",
+        "dosage": [
+          {
+            "text": "25 mg oral PRN",
+            "route": {
+              "coding": [
+                {
+                  "system": "http://snomed.info/sct",
+                  "code": "26643006",
+                  "display": "Oral route"
+                }
+              ],
+              "text": "Oral route"
+            }
+          }
+        ],
+        "reasonCode": [
+          {
+            "text": "Sleep aid (FLAGGED \u2014 Beers list anticholinergic)"
+          }
+        ]
+      },
+      "request": {
+        "method": "PUT",
+        "url": "MedicationStatement/med-henderson-13"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:obs-henderson-egfr",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "obs-henderson-egfr",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory",
+                "display": "Laboratory"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "48642-3",
+              "display": "Glomerular filtration rate predicted (CKD-EPI)"
+            }
+          ],
+          "text": "Glomerular filtration rate predicted (CKD-EPI)"
+        },
+        "subject": {
+          "reference": "Patient/patient-henderson-78"
+        },
+        "effectiveDateTime": "2026-04-15",
+        "valueQuantity": {
+          "value": 38.0,
+          "unit": "mL/min/1.73m2",
+          "system": "http://unitsofmeasure.org",
+          "code": "mL/min/{1.73_m2}"
+        },
+        "interpretation": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation",
+                "code": "L",
+                "display": "L"
+              }
+            ],
+            "text": "L"
+          }
+        ]
+      },
+      "request": {
+        "method": "PUT",
+        "url": "Observation/obs-henderson-egfr"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:obs-henderson-creatinine",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "obs-henderson-creatinine",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory",
+                "display": "Laboratory"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "2160-0",
+              "display": "Creatinine [Mass/volume] in Serum or Plasma"
+            }
+          ],
+          "text": "Creatinine [Mass/volume] in Serum or Plasma"
+        },
+        "subject": {
+          "reference": "Patient/patient-henderson-78"
+        },
+        "effectiveDateTime": "2026-04-15",
+        "valueQuantity": {
+          "value": 1.6,
+          "unit": "mg/dL",
+          "system": "http://unitsofmeasure.org",
+          "code": "mg/dL"
+        },
+        "interpretation": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation",
+                "code": "H",
+                "display": "H"
+              }
+            ],
+            "text": "H"
+          }
+        ]
+      },
+      "request": {
+        "method": "PUT",
+        "url": "Observation/obs-henderson-creatinine"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:obs-henderson-ef",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "obs-henderson-ef",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "laboratory",
+                "display": "Laboratory"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "10230-1",
+              "display": "Left ventricular Ejection fraction"
+            }
+          ],
+          "text": "Left ventricular Ejection fraction"
+        },
+        "subject": {
+          "reference": "Patient/patient-henderson-78"
+        },
+        "effectiveDateTime": "2025-11-08",
+        "valueQuantity": {
+          "value": 35.0,
+          "unit": "%",
+          "system": "http://unitsofmeasure.org",
+          "code": "%"
+        },
+        "interpretation": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/v3-ObservationInterpretation",
+                "code": "L",
+                "display": "L"
+              }
+            ],
+            "text": "L"
+          }
+        ]
+      },
+      "request": {
+        "method": "PUT",
+        "url": "Observation/obs-henderson-ef"
+      }
+    },
+    {
+      "fullUrl": "urn:uuid:obs-henderson-bp-sys",
+      "resource": {
+        "resourceType": "Observation",
+        "id": "obs-henderson-bp-sys",
+        "status": "final",
+        "category": [
+          {
+            "coding": [
+              {
+                "system": "http://terminology.hl7.org/CodeSystem/observation-category",
+                "code": "vital-signs",
+                "display": "Vital-signs"
+              }
+            ]
+          }
+        ],
+        "code": {
+          "coding": [
+            {
+              "system": "http://loinc.org",
+              "code": "8480-6",
+              "display": "Systolic blood pressure"
+            }
+          ],
+          "text": "Systolic blood pressure"
+        },
+        "subject": {
+          "reference": "Patient/patient-henderson-78"
+        },
+        "effectiveDateTime": "2026-04-22",
+        "valueQuantity": {
+          "value": 118,
+          "unit": "mmHg",
+          "system": "http://unitsofmeasure.org",
+          "code": "mm[Hg]"
+        }
+      },
+      "request": {
+        "method": "PUT",
+        "url": "Observation/obs-henderson-bp-sys"
+      }
+    }
+  ]
+}

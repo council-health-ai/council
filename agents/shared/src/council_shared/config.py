@@ -49,7 +49,11 @@ class Settings:
     # LLM
     gemini_api_key: str = field(default_factory=lambda: os.getenv("GEMINI_API_KEY", ""))
     gemini_model: str = field(default_factory=lambda: os.getenv("GEMINI_MODEL", "gemini-2.5-flash"))
-    convener_model: str = field(default_factory=lambda: os.getenv("CONVENER_MODEL", "gemini-2.5-pro"))
+    # Convener defaults to flash on trial-credit Vertex projects: 2.5-pro's RPM
+    # ceiling collides with 8-peer fan-out and triggers 429 RESOURCE_EXHAUSTED.
+    # Override to 2.5-pro via env once on a paid Vertex project for richer
+    # synthesis prose.
+    convener_model: str = field(default_factory=lambda: os.getenv("CONVENER_MODEL", "gemini-2.5-flash"))
 
     # MCP server (the specialty-lens-mcp Hugging Face Space)
     mcp_url: str = field(

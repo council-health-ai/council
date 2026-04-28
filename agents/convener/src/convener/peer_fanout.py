@@ -79,6 +79,17 @@ def all_specialty_urls() -> list[tuple[str, str]]:
     ]
 
 
+_MAX_RETRIES_429 = 3
+_RETRY_BACKOFF_BASE_SECONDS = 4.0
+
+
+def _looks_like_429(text: str | None) -> bool:
+    if not text:
+        return False
+    lowered = text.lower()
+    return "resource_exhausted" in lowered or "429" in lowered
+
+
 async def _call_one_peer(
     *,
     httpx_client: httpx.AsyncClient,
@@ -99,19 +110,38 @@ async def _call_one_peer(
 
         client = factory.create(card)
 
-        msg = Message(
-            role=Role.user,
-            parts=[Part(root=TextPart(text=prompt))],
-            message_id=uuid.uuid4().hex,
-            context_id=context_id,
-            metadata=(fhir_metadata or None),
-        )
+        text: str | None = None
+        structured: dict[str, Any] | None = None
         responses: list[Any] = []
-        async for chunk in client.send_message(msg):
-            responses.append(chunk)
-        latency_ms = int((time.monotonic() - started) * 1000)
 
-        text, structured = _extract_view(responses)
+        for attempt in range(_MAX_RETRIES_429):
+            msg = Message(
+                role=Role.user,
+                parts=[Part(root=TextPart(text=prompt))],
+                message_id=uuid.uuid4().hex,
+                context_id=context_id,
+                metadata=(fhir_metadata or None),
+            )
+            responses = []
+            async for chunk in client.send_message(msg):
+                responses.append(chunk)
+            text, structured = _extract_view(responses)
+
+            # Vertex 429 surfaces inside the agent's text response (the lens
+            # tool catches the exception and returns an error string). Detect it
+            # and retry with exponential backoff before giving up.
+            if not _looks_like_429(text) or attempt == _MAX_RETRIES_429 - 1:
+                break
+            backoff = _RETRY_BACKOFF_BASE_SECONDS * (2**attempt)
+            logger.warning(
+                "peer returned vertex 429; retrying with backoff",
+                specialty=specialty,
+                attempt=attempt + 1,
+                backoff_seconds=backoff,
+            )
+            await asyncio.sleep(backoff)
+
+        latency_ms = int((time.monotonic() - started) * 1000)
 
         # Diagnostic: surface raw response shape + parse outcome to HF logs.
         chunk_types = [type(r).__name__ for r in responses]
@@ -323,16 +353,18 @@ async def fan_out(
     fhir_metadata: dict[str, Any] | None,
     api_key: str | None = None,
     timeout_seconds: float = 90.0,
-    max_concurrency: int = 3,
+    max_concurrency: int = 2,
 ) -> list[PeerResult]:
     """Send the same/different prompt to multiple peers in parallel. Each peer's url is hit
     via its A2A AgentCard. Returns one PeerResult per call (success or error).
 
     `max_concurrency` caps how many specialty agents are called simultaneously. We
-    keep this conservative (3) because every peer call wakes a separate Vertex
+    keep this conservative (2) because every peer call wakes a separate Vertex
     Gemini conversation, and Vertex's per-project per-minute rate limit is
-    triggered when we burst all 8 at once (live-observed 429 RESOURCE_EXHAUSTED).
-    Semaphore-bounded fan-out trades a few seconds of wallclock for reliability.
+    triggered when we burst all 8 at once (live-observed 429 RESOURCE_EXHAUSTED
+    on trial-credit projects). Semaphore-bounded fan-out trades a few seconds
+    of wallclock for reliability. Combined with per-peer 429 retry-with-backoff
+    in _call_one_peer, Round 1 stays inside the General Chat 60s timeout.
     """
     api_key = api_key or settings.peer_api_key
     headers = {"X-API-Key": api_key} if api_key else {}

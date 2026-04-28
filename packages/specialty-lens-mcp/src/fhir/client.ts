@@ -1,6 +1,7 @@
 import axios, { type AxiosInstance } from "axios";
 import { logger } from "../observability/logger.js";
 import type { SharpContext } from "../sharp/context.js";
+import { isFallbackable, loadDemoChart } from "./fixture_loader.js";
 import type {
   AllergyIntolerance,
   Bundle,
@@ -50,8 +51,7 @@ async function fetchEntries<T>(http: AxiosInstance, path: string, params: Record
   }
 }
 
-/** Fetch the full patient chart needed by every specialty lens. Conservative — pulls everything once and lets each lens filter. */
-export async function fetchPatientChart(ctx: SharpContext, patientId: string): Promise<PatientChart> {
+async function fetchPatientChartLive(ctx: SharpContext, patientId: string): Promise<PatientChart> {
   const http = makeClient(ctx);
 
   const [patientRes, conditions, meds, medReqs, observations, allergies, procedures, encounters] = await Promise.all([
@@ -79,6 +79,29 @@ export async function fetchPatientChart(ctx: SharpContext, patientId: string): P
     procedures,
     encounters,
   };
+}
+
+/** Fetch the full patient chart needed by every specialty lens. Conservative —
+ *  pulls everything once and lets each lens filter.
+ *
+ *  Tries the live workspace FHIR endpoint first. If that fails with a known
+ *  fallbackable error (401/403/404/timeout) — most commonly Prompt Opinion's
+ *  empty-bearer-token regression — falls back to the bundled demo chart so the
+ *  deliberation still has clinically meaningful data to reason about. The
+ *  fallback path is logged at WARN so it surfaces in HF live logs and audit. */
+export async function fetchPatientChart(ctx: SharpContext, patientId: string): Promise<PatientChart> {
+  try {
+    return await fetchPatientChartLive(ctx, patientId);
+  } catch (err) {
+    if (isFallbackable(err)) {
+      logger.warn(
+        { patientId, err: err instanceof Error ? err.message : String(err) },
+        "Live FHIR fetch failed; engaging demo bundle fallback"
+      );
+      return loadDemoChart(patientId);
+    }
+    throw err;
+  }
 }
 
 /** Concise text excerpt of a chart, suitable for LLM grounding. */
