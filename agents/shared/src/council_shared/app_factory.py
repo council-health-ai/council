@@ -41,6 +41,7 @@ def create_a2a_app(
     role: str,
     skills: list[AgentSkill],
     require_api_key: bool = True,
+    reshape_response_for_po: bool = True,
     version: str = "0.1.0",
 ):
     """Build a Starlette ASGI app exposing an ADK agent over A2A using ADK's to_a2a helper."""
@@ -83,15 +84,14 @@ def create_a2a_app(
     # NOTE: root path "/" is owned by the JSON-RPC handler (POST). GET / will 405.
 
     # ── Bridge middleware (auth + method aliasing + FHIR bridging + reshape) ─
-    if require_api_key:
-        keys = get_default_api_keys()
-        if keys:
-            app.add_middleware(A2APlatformBridgeMiddleware, valid_keys=keys)
-        else:
-            logger.warning("require_api_key=True but no API_KEYS in env — auth disabled", service=name)
-    else:
-        # Still install the bridge middleware (no auth) so method aliasing / reshape happen
-        app.add_middleware(A2APlatformBridgeMiddleware, valid_keys=())
+    keys = get_default_api_keys() if require_api_key else ()
+    if require_api_key and not keys:
+        logger.warning("require_api_key=True but no API_KEYS in env — auth disabled", service=name)
+    app.add_middleware(
+        A2APlatformBridgeMiddleware,
+        valid_keys=keys,
+        reshape_response=reshape_response_for_po,
+    )
 
     logger.info("a2a app ready", name=name, url=url, role=role, n_skills=len(skills))
     return app

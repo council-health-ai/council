@@ -133,11 +133,18 @@ def _reshape_to_po_envelope(parsed: dict) -> bool:
 
 
 class A2APlatformBridgeMiddleware(BaseHTTPMiddleware):
-    """One middleware to rule them all — auth + method aliasing + FHIR bridging + reshape."""
+    """One middleware: auth + method aliasing + FHIR bridging + (optional) PO reshape.
 
-    def __init__(self, app, valid_keys: tuple[str, ...] = ()):
+    `reshape_response`: True only on agents PO calls directly (the Convener).
+    Specialty agents called peer-to-peer by the Convener via a2a-sdk MUST NOT
+    reshape — the SDK expects the canonical spec shape and rejects PO's shape
+    with 7 pydantic validation errors.
+    """
+
+    def __init__(self, app, valid_keys: tuple[str, ...] = (), reshape_response: bool = True):
         super().__init__(app)
         self.valid_keys = set(valid_keys)
+        self.reshape_response = reshape_response
 
     async def dispatch(self, request: Request, call_next) -> Response:
         # ── 1. Read body once (we may rewrite) ───────────────────────────
@@ -218,8 +225,8 @@ class A2APlatformBridgeMiddleware(BaseHTTPMiddleware):
                 media_type=response.media_type,
             )
 
-        # ── 7. Reshape response to PO's envelope ────────────────────────
-        if _reshape_to_po_envelope(resp_parsed):
+        # ── 7. Reshape response to PO's envelope (only on agents PO calls) ─
+        if self.reshape_response and _reshape_to_po_envelope(resp_parsed):
             logger.info("response reshaped to po envelope", task_id=resp_parsed.get("result", {}).get("task", {}).get("id"))
 
         new_resp_body = json.dumps(resp_parsed, ensure_ascii=False).encode("utf-8")
