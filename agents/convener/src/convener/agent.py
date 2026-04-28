@@ -146,8 +146,8 @@ async def convene_council(
         calls=calls,
         context_id=a2a_context_id,
         fhir_metadata=fhir_metadata,
-        timeout_seconds=35.0,
-        wallclock_cap_seconds=35.0,
+        timeout_seconds=25.0,
+        wallclock_cap_seconds=25.0,
         max_concurrency=4,
     )
 
@@ -192,12 +192,10 @@ async def convene_council(
     # ConcordantPlan still reflects detected disagreements.
     conflicts: list[dict[str, Any]] = []
 
-    # Round 1 just hammered Vertex with up to 8 Gemini calls in a ~30s window.
-    # On a trial-credit project the rolling-minute RPM ceiling is hot enough
-    # that the brief Gemini call almost always 429s on first try. A small
-    # cooldown lets the window drain so the brief lands clean — saves ~3-5s
-    # of retry-backoff wallclock on the critical path.
-    await asyncio.sleep(4)
+    # No pre-brief cooldown: PO's General Chat orchestrator has a hard ~60s
+    # LLM-window ceiling, and we've measured every second is needed.
+    # MCP-side gemini.ts retries (1.5s/3s) absorb a single 429 if the rolling
+    # quota happens to be hot.
 
     # ── Concordance brief synthesis ─────────────────────────────────────
     cb_started = time.monotonic()
