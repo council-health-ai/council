@@ -142,13 +142,16 @@ async def convene_council(
     calls = [PeerCall(specialty=spec, url=url, prompt=round1_prompt) for spec, url in all_specialty_urls()]
     logger.info("round 1 fanout", n_peers=len(calls), convening_id=convening_id)
 
+    # Multi-region Vertex eliminates the 429-retry cliff — peers respond in
+    # 18-25s on warm Spaces. 35s wallclock cap captures most/all and still
+    # leaves ~20s for the brief synthesis inside PO's 60s ceiling.
     results_r1 = await fan_out(
         calls=calls,
         context_id=a2a_context_id,
         fhir_metadata=fhir_metadata,
-        timeout_seconds=25.0,
-        wallclock_cap_seconds=25.0,
-        max_concurrency=4,
+        timeout_seconds=35.0,
+        wallclock_cap_seconds=35.0,
+        max_concurrency=8,
     )
 
     views: list[dict[str, Any]] = []
