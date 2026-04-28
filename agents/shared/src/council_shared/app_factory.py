@@ -1,10 +1,18 @@
-"""Starlette ASGI factory that wires an ADK agent to A2A with v0 + v1 path coverage.
+"""Starlette ASGI factory matching po-adk-python's working pattern exactly.
 
-Uses a2a-sdk 0.3.26's `A2AStarletteApplication` to handle JSON-RPC routing, and adds:
-- /.well-known/agent.json — v0 backcompat path (the Prompt Opinion walkthrough uses this)
-- /healthz — service health probe (HF Spaces healthcheck + GitHub Actions cron)
-- API key middleware
-- Sentry integration
+Uses google-adk's `to_a2a` helper instead of manually wiring A2aAgentExecutor
++ DefaultRequestHandler + A2AStarletteApplication.build(). The manual path
+emits Message events for short responses; PO's parser only treats Task events
+as valid responses, hence "external agent did not respond with a task."
+The `to_a2a` helper emits Tasks consistently when streaming=False (per
+po-adk-python — confirmed working in production).
+
+Adds on top:
+- /healthz route
+- /.well-known/agent.json (v0 backcompat — walkthrough video uses this path)
+- A2APlatformBridgeMiddleware (method aliasing, role aliasing, FHIR metadata
+  bridging, response reshape into PO's task envelope)
+- Sentry init
 """
 
 from __future__ import annotations
@@ -12,15 +20,13 @@ from __future__ import annotations
 from typing import Any
 
 import structlog
-from a2a.server.apps import A2AStarletteApplication
-from a2a.server.request_handlers import DefaultRequestHandler
-from a2a.server.tasks import InMemoryTaskStore
 from a2a.types import AgentSkill
+from google.adk.a2a.utils.agent_to_a2a import to_a2a
 from starlette.requests import Request
 from starlette.responses import JSONResponse
 
-from .card_factory import make_agent_card
-from .middleware import ApiKeyMiddleware, get_default_api_keys
+from .card_factory import AgentCardV1, make_agent_card
+from .middleware import A2APlatformBridgeMiddleware, get_default_api_keys
 from .sentry_init import init_sentry
 
 logger = structlog.get_logger("council.app_factory")
@@ -37,11 +43,11 @@ def create_a2a_app(
     require_api_key: bool = True,
     version: str = "0.1.0",
 ):
-    """Build a Starlette ASGI app exposing an ADK agent over A2A (v0.3 native + v0 path backcompat)."""
+    """Build a Starlette ASGI app exposing an ADK agent over A2A using ADK's to_a2a helper."""
 
     init_sentry(service_name=name)
 
-    card = make_agent_card(
+    card: AgentCardV1 = make_agent_card(
         name=name,
         description=description,
         url=url,
@@ -51,78 +57,15 @@ def create_a2a_app(
         version=version,
     )
 
-    # Bridge ADK Agent -> A2A AgentExecutor
-    from google.adk.a2a.executor.a2a_agent_executor import A2aAgentExecutor
+    # ── ADK's to_a2a does the right thing: builds a Starlette app with proper
+    #    Task-emitting executor, mounts the agent card at /.well-known/agent-card.json,
+    #    and the JSON-RPC endpoint at /. Returns a Starlette instance.
+    app = to_a2a(agent, port=7860, agent_card=card)
 
-    executor = A2aAgentExecutor(runner=_make_runner(agent))
+    # ── Add v0 backcompat agent-card route (the walkthrough video uses this path).
+    async def agent_card_v0(_request: Request) -> JSONResponse:
+        return JSONResponse(card.model_dump(mode="json", by_alias=True, exclude_none=True))
 
-    handler = DefaultRequestHandler(
-        agent_executor=executor,
-        task_store=InMemoryTaskStore(),
-    )
-
-    a2a_app = A2AStarletteApplication(agent_card=card, http_handler=handler)
-    # Park the SDK's default agent-card route on an internal path so we can override the
-    # well-known paths with a card-shape that includes v1's `supportedInterfaces`.
-    # The Prompt Opinion platform's parser requires that field; a2a-sdk 0.3.x emits only
-    # `additionalInterfaces` (v0 shape), so we transform on the way out.
-    starlette_app = a2a_app.build(agent_card_url="/_internal/a2a-card", rpc_url="/")
-
-    def card_dump() -> dict:
-        base = card.model_dump(mode="json", by_alias=True, exclude_none=True)
-
-        # 1. PO requires v1's `supportedInterfaces`. Build it from v0.3 fields.
-        supported_interfaces = []
-        for iface in base.get("additionalInterfaces", []) or []:
-            supported_interfaces.append({
-                "url": iface.get("url"),
-                "protocolBinding": iface.get("transport") or "JSONRPC",
-                "protocolVersion": "1.0",
-            })
-        if base.get("url"):
-            top_iface = {
-                "url": base["url"],
-                "protocolBinding": base.get("preferredTransport") or "JSONRPC",
-                "protocolVersion": "1.0",
-            }
-            if top_iface not in supported_interfaces:
-                supported_interfaces.insert(0, top_iface)
-        if supported_interfaces:
-            base["supportedInterfaces"] = supported_interfaces
-
-        # 2. PO expects v1's nested-key security-scheme shape with `location` (not `in`).
-        # a2a-sdk 0.3 emits the flat OpenAPI shape; transform here.
-        schemes = base.get("securitySchemes")
-        if schemes:
-            transformed = {}
-            for key, scheme in schemes.items():
-                if not isinstance(scheme, dict):
-                    transformed[key] = scheme
-                    continue
-                t = scheme.get("type")
-                if t == "apiKey":
-                    transformed[key] = {
-                        "apiKeySecurityScheme": {
-                            "name": scheme.get("name"),
-                            "location": scheme.get("in") or scheme.get("location"),
-                            "description": scheme.get("description"),
-                        }
-                    }
-                elif t in ("http", "httpAuth"):
-                    transformed[key] = {"httpAuthSecurityScheme": scheme}
-                elif t == "oauth2":
-                    transformed[key] = {"oauth2SecurityScheme": scheme}
-                elif t == "openIdConnect":
-                    transformed[key] = {"openIdConnectSecurityScheme": scheme}
-                elif t == "mutualTLS":
-                    transformed[key] = {"mtlsSecurityScheme": scheme}
-                else:
-                    transformed[key] = scheme
-            base["securitySchemes"] = transformed
-
-        return base
-
-    # ── extra routes ─────────────────────────────────────────────────
     async def healthz(_request: Request) -> JSONResponse:
         return JSONResponse({"ok": True, "service": name, "version": version})
 
@@ -135,39 +78,20 @@ def create_a2a_app(
             "rpc": "POST /",
         })
 
-    async def agent_card_v1(_request: Request) -> JSONResponse:
-        return JSONResponse(card_dump())
+    app.add_route("/.well-known/agent.json", agent_card_v0, methods=["GET"])
+    app.add_route("/healthz", healthz, methods=["GET"])
+    # NOTE: root path "/" is owned by the JSON-RPC handler (POST). GET / will 405.
 
-    async def agent_card_v0(_request: Request) -> JSONResponse:
-        return JSONResponse(card_dump())
-
-    starlette_app.add_route("/healthz", healthz, methods=["GET"])
-    starlette_app.add_route("/", root, methods=["GET"])
-    starlette_app.add_route("/.well-known/agent-card.json", agent_card_v1, methods=["GET"])
-    starlette_app.add_route("/.well-known/agent.json", agent_card_v0, methods=["GET"])
-
-    # ── middleware ───────────────────────────────────────────────────
+    # ── Bridge middleware (auth + method aliasing + FHIR bridging + reshape) ─
     if require_api_key:
         keys = get_default_api_keys()
         if keys:
-            starlette_app.add_middleware(ApiKeyMiddleware, valid_keys=keys)
+            app.add_middleware(A2APlatformBridgeMiddleware, valid_keys=keys)
         else:
-            logger.warning(
-                "require_api_key=True but no API_KEYS in env — auth disabled. Set API_KEY_PRIMARY.",
-                service=name,
-            )
+            logger.warning("require_api_key=True but no API_KEYS in env — auth disabled", service=name)
+    else:
+        # Still install the bridge middleware (no auth) so method aliasing / reshape happen
+        app.add_middleware(A2APlatformBridgeMiddleware, valid_keys=())
 
     logger.info("a2a app ready", name=name, url=url, role=role, n_skills=len(skills))
-    return starlette_app
-
-
-def _make_runner(agent: Any):
-    """Build a google-adk Runner around the agent. The A2aAgentExecutor delegates to it."""
-    from google.adk.runners import Runner
-    from google.adk.sessions import InMemorySessionService
-
-    return Runner(
-        app_name=getattr(agent, "name", "council-agent"),
-        agent=agent,
-        session_service=InMemorySessionService(),
-    )
+    return app

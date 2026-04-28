@@ -87,7 +87,9 @@ def test_card_without_api_key() -> None:
     assert card.security is None
 
 
-def test_capabilities_streaming_default_on() -> None:
+def test_capabilities_streaming_default_off() -> None:
+    # streaming=False is required for ADK to_a2a to emit Task events instead of
+    # Message events; PO's parser only treats Tasks as valid responses.
     card = make_agent_card(
         name="cardiology-agent",
         description="Test card.",
@@ -95,6 +97,6 @@ def test_capabilities_streaming_default_on() -> None:
         role="cardiology",
         skills=[_skill()],
     )
-    assert card.capabilities.streaming is True
+    assert card.capabilities.streaming is False
     assert card.capabilities.push_notifications is False
     assert card.capabilities.state_transition_history is False
