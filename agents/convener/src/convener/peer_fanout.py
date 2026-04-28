@@ -132,12 +132,48 @@ async def _call_one_peer(
         )
 
 
+# A SpecialtyView dict is identified by carrying any of these signature fields.
+# We don't require all of them because Gemini sometimes drops a key when paraphrasing.
+_SPECIALTY_VIEW_SIGNATURE_KEYS = frozenset(
+    {
+        "specialty",
+        "primary_concerns",
+        "red_flags",
+        "proposed_plan",
+        "applicable_guidelines",
+        "reasoning_trace",
+    }
+)
+
+
+def _looks_like_view(parsed: Any) -> bool:
+    return (
+        isinstance(parsed, dict)
+        and len(_SPECIALTY_VIEW_SIGNATURE_KEYS & parsed.keys()) >= 2
+    )
+
+
 def _extract_view(responses: list[Any]) -> tuple[str | None, dict[str, Any] | None]:
-    """From a stream of A2A responses, find the agent's final text + try to parse as SpecialtyView JSON."""
+    """From a stream of A2A responses, find a SpecialtyView dict.
+
+    Strategy (most robust first):
+      1. Walk the stream for function/tool-response artifacts — the raw MCP tool
+         output lives there as a structured dict, *before* Gemini paraphrases it.
+      2. Fall back to the agent's final text and try increasingly tolerant
+         JSON parses: plain, markdown fence, prose-wrapped, partial.
+    """
+    # 1. Look for raw structured tool outputs first
+    for r in responses:
+        view = _scan_for_structured_view(r)
+        if view is not None:
+            try:
+                return json.dumps(view), view
+            except (TypeError, ValueError):
+                pass
+
+    # 2. Fall back to text extraction + JSON parse
     final_text: str | None = None
     for r in responses:
-        # The streamed responses are typed objects; we duck-type robustly.
-        # Try task artifact, message parts, raw text.
         text = _scan_for_text(r)
         if text:
             final_text = text
@@ -145,15 +181,15 @@ def _extract_view(responses: list[Any]) -> tuple[str | None, dict[str, Any] | No
     if not final_text:
         return None, None
 
-    # Try plain JSON parse first
+    # Plain JSON
     try:
         parsed = json.loads(final_text)
-        if isinstance(parsed, dict) and "specialty" in parsed:
+        if _looks_like_view(parsed):
             return final_text, parsed
     except json.JSONDecodeError:
         pass
 
-    # Tolerate ```json ... ``` markdown fences (LLMs love wrapping JSON in code blocks)
+    # Markdown fence
     fence_match = None
     for marker in ("```json", "```JSON", "```"):
         if marker in final_text:
@@ -165,24 +201,64 @@ def _extract_view(responses: list[Any]) -> tuple[str | None, dict[str, Any] | No
     if fence_match:
         try:
             parsed = json.loads(fence_match)
-            if isinstance(parsed, dict) and "specialty" in parsed:
+            if _looks_like_view(parsed):
                 return final_text, parsed
         except json.JSONDecodeError:
             pass
 
-    # Tolerate JSON embedded in surrounding prose: find first {...} balanced block
+    # Prose-wrapped: largest balanced {…} span
     first_brace = final_text.find("{")
     last_brace = final_text.rfind("}")
     if first_brace >= 0 and last_brace > first_brace:
         candidate = final_text[first_brace : last_brace + 1]
         try:
             parsed = json.loads(candidate)
-            if isinstance(parsed, dict) and "specialty" in parsed:
+            if _looks_like_view(parsed):
                 return final_text, parsed
         except json.JSONDecodeError:
             pass
 
     return final_text, None
+
+
+def _scan_for_structured_view(obj: Any) -> dict[str, Any] | None:
+    """Walk a streamed A2A response object looking for a SpecialtyView-shaped dict.
+
+    Catches ADK/A2A function_response artifacts where the MCP tool's return value
+    is carried as structured data — bypassing the LLM's paraphrase entirely.
+    """
+    if isinstance(obj, dict):
+        if _looks_like_view(obj):
+            return obj  # type: ignore[return-value]
+        for v in obj.values():
+            inner = _scan_for_structured_view(v)
+            if inner is not None:
+                return inner
+    elif isinstance(obj, list):
+        for item in obj:
+            inner = _scan_for_structured_view(item)
+            if inner is not None:
+                return inner
+    elif hasattr(obj, "__dict__") or hasattr(obj, "model_dump"):
+        # Pydantic / dataclass / regular object — peek into common payload attrs
+        for attr in (
+            "response",
+            "result",
+            "output",
+            "content",
+            "data",
+            "artifact",
+            "artifacts",
+            "parts",
+            "function_response",
+            "tool_response",
+        ):
+            value = getattr(obj, attr, None)
+            if value is not None:
+                inner = _scan_for_structured_view(value)
+                if inner is not None:
+                    return inner
+    return None
 
 
 def _scan_for_text(obj: Any) -> str | None:
