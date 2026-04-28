@@ -1,21 +1,28 @@
 """Convener agent — facilitates The Council's deliberation.
 
-Round protocol:
-  Round 1 — fan out to all 8 specialty agents in parallel; collect SpecialtyViews
-  Concordance — call MCP get_council_conflict_matrix(views)
-  Round 2 — for each conflict, fan out to the involved specialties only with the conflict context
-  Brief — call MCP get_concordance_brief(views, conflicts)
-  Emit — return ConcordantPlan as the artifact
+Architecture: the `convene_council` tool returns within seconds with a public
+live-deliberation URL. The actual multi-agent deliberation (Round 1 fan-out
+to 8 specialty agents + concordance brief synthesis) runs in a background
+asyncio task that streams audit events + the final ConcordantPlan to Supabase.
+The convene-ui static page subscribes to Supabase Realtime and renders the
+deliberation as it happens.
 
-The Convener uses Gemini for natural-language framing of round prompts and for narrating progress,
-but the deliberation flow itself is deterministic (not LLM-routed). This is the structural
-differentiator: peer A2A with deterministic fan-out, not orchestrator-with-Gemini-routing.
+This split is essential because Prompt Opinion's General Chat surface has a
+~60s LLM-orchestration ceiling. A full Council deliberation across 8 specialty
+LLMs + the brief takes ~50s of wallclock — close enough to the ceiling that
+PO sometimes gives up before the function call returns. By returning fast
+with a live link, the chat surface stays snappy and the rich rendering
+happens at convene-ui in real time.
+
+The Convener uses Gemini for chat framing only — the deliberation itself is
+deterministic peer A2A (NOT orchestrator-with-Gemini-routing). That structural
+choice is the differentiator: peer A2A is what the A2A spec was designed for,
+HAO-style group chat is closer to a chatroom-with-LLM-router.
 """
 
 from __future__ import annotations
 
 import asyncio
-import json
 import time
 import uuid
 from typing import Any
@@ -47,17 +54,166 @@ Convening session: {convening_id}
 Round: 1
 """
 
-ROUND_2_PROMPT_TEMPLATE = """\
-The Council needs your response on the following conflicts identified in Round 1.
 
-Convening session: {convening_id}
-Round: 2
+# ── Background deliberation task ────────────────────────────────────────
 
-Conflicts involving you:
-{conflicts}
 
-Please respond with your reasoning. Propose harmonized resolutions where possible; preserve dissent where you can't compromise.
-"""
+async def _run_deliberation(
+    *,
+    convening_id: str,
+    fhir_url: str,
+    fhir_token: str,
+    patient_id: str,
+    a2a_context_id: str,
+    fhir_metadata: dict[str, Any],
+    focus_problem: str | None,
+) -> None:
+    """Run the full Council deliberation. Persists everything to Supabase.
+
+    Designed to be spawned via asyncio.create_task() from the convene_council
+    tool — never raises out to the caller. Errors are logged + recorded as
+    a session_ended audit event so the UI shows the failure mode.
+    """
+    overall_started = time.monotonic()
+    try:
+        round1_prompt = ROUND_1_PROMPT_TEMPLATE.format(
+            patient_id=patient_id, convening_id=convening_id
+        )
+        if focus_problem:
+            round1_prompt += f"\n\nFocus problem: {focus_problem}\n"
+
+        calls = [
+            PeerCall(specialty=spec, url=url, prompt=round1_prompt)
+            for spec, url in all_specialty_urls()
+        ]
+        logger.info("round 1 fanout", n_peers=len(calls), convening_id=convening_id)
+
+        # Multi-region Vertex eliminates the 429-retry cliff. 60s wallclock
+        # cap is generous now that we no longer need to fit inside PO's
+        # General Chat ceiling — slow specialties (cold-start, region quota
+        # contention) can still finish.
+        results_r1 = await fan_out(
+            calls=calls,
+            context_id=a2a_context_id,
+            fhir_metadata=fhir_metadata,
+            timeout_seconds=60.0,
+            wallclock_cap_seconds=60.0,
+            max_concurrency=8,
+        )
+
+        views: list[dict[str, Any]] = []
+        for r in results_r1:
+            if r.success and r.structured_view:
+                view = {**r.structured_view, "patient_id": patient_id}
+                views.append(view)
+                await record_agent_message(
+                    convening_id=convening_id,
+                    role=r.specialty,
+                    direction="inbound",
+                    content=view,
+                    round_id=1,
+                )
+
+        if len(views) < 2:
+            msg = f"Round 1 yielded only {len(views)} valid SpecialtyViews — cannot synthesize concordance."
+            logger.error(msg)
+            await record_audit_event(
+                convening_id=convening_id,
+                actor="agent/convener",
+                action="session_ended",
+                payload={
+                    "error": msg,
+                    "round1_results": [
+                        r.specialty + ":" + ("ok" if r.success else "fail")
+                        for r in results_r1
+                    ],
+                },
+            )
+            await close_session(convening_id=convening_id)
+            return
+
+        # ── Concordance brief synthesis ───────────────────────────────────
+        cb_started = time.monotonic()
+        try:
+            plan = await call_mcp_tool(
+                tool_name="get_concordance_brief",
+                arguments={
+                    "views": views,
+                    "conflicts": {
+                        "patient_id": patient_id,
+                        "specialties": [v.get("specialty") for v in views],
+                        "conflicts": [],
+                        "agreements": [],
+                        "abstentions": [],
+                    },
+                    "total_messages": len(views),
+                    "total_rounds": 1,
+                },
+                fhir_url=fhir_url,
+                fhir_token=fhir_token,
+                patient_id=patient_id,
+                convening_id=convening_id,
+                specialty="convener",
+                round_id=1,
+            )
+        except Exception as brief_err:
+            logger.warning("brief synthesis failed; persisting Round-1 only", err=str(brief_err))
+            await record_audit_event(
+                convening_id=convening_id,
+                actor="agent/convener",
+                action="session_ended",
+                payload={"error": f"brief_failed: {str(brief_err)[:300]}", "n_views": len(views)},
+            )
+            await close_session(convening_id=convening_id)
+            return
+
+        await record_tool_call(
+            convening_id=convening_id,
+            tool_name="get_concordance_brief",
+            params={"n_views": len(views), "n_conflicts": 0},
+            result={"n_actions": len(plan.get("action_items", []))},
+            status="success",
+            latency_ms=int((time.monotonic() - cb_started) * 1000),
+        )
+        await record_audit_event(
+            convening_id=convening_id,
+            actor="agent/convener",
+            action="plan_synthesized",
+            payload={
+                "specialties": plan.get("specialties_consulted", []),
+                "n_actions": len(plan.get("action_items", [])),
+            },
+        )
+        await record_audit_event(
+            convening_id=convening_id,
+            actor="agent/convener",
+            action="session_ended",
+            payload={"total_latency_ms": int((time.monotonic() - overall_started) * 1000)},
+        )
+        await close_session(convening_id=convening_id, plan_artifact=plan)
+        logger.info(
+            "deliberation complete",
+            convening_id=convening_id,
+            n_views=len(views),
+            n_actions=len(plan.get("action_items", [])),
+            latency_s=round(time.monotonic() - overall_started, 1),
+        )
+
+    except Exception as crash:
+        logger.exception("deliberation crashed", convening_id=convening_id, err=str(crash))
+        try:
+            await record_audit_event(
+                convening_id=convening_id,
+                actor="agent/convener",
+                action="session_ended",
+                payload={"error": f"crashed: {str(crash)[:300]}"},
+            )
+            await close_session(convening_id=convening_id)
+        except Exception:
+            pass
+
+
+# ── Tool exposed to the agent ───────────────────────────────────────────
 
 
 async def convene_council(
@@ -65,12 +221,17 @@ async def convene_council(
     patient_id: str | None = None,
     focus_problem: str | None = None,
 ) -> dict[str, Any]:
-    """Convene The Council on a patient. Returns the final ConcordantPlan.
+    """Convene The Council on a patient. Returns IMMEDIATELY with a live link.
+
+    The deliberation (Round 1 fan-out + brief synthesis) runs in a background
+    asyncio task that streams audit events + the final ConcordantPlan to
+    Supabase. The chat surface gets a snappy response with a clickable URL;
+    the full plan renders on convene-ui in real time as the deliberation
+    plays out.
 
     The patient_id is OPTIONAL — when called from the Prompt Opinion platform,
-    the FHIR context already includes the active patient's ID (lifted into
-    tool_context.state by the before_model_callback). Call this tool
-    immediately on receiving any 'consult with Convener' request rather
+    the FHIR context already includes the active patient's ID. Call this tool
+    immediately on receiving any 'consult with the Convener' request rather
     than asking the user for an ID.
 
     Args:
@@ -84,22 +245,15 @@ async def convene_council(
     a2a_context_id = state.get("context_id") or uuid.uuid4().hex
     workspace_id = state.get("workspace_id") or "po-default"
 
-    # Default patient_id from FHIR context (the platform attaches it automatically)
     if not patient_id:
         patient_id = state.get("patient_id", "")
-
     if not patient_id:
-        return {"error": "No patient_id provided and none in FHIR context. The Council requires an active patient context."}
-
-    # Only fhir_url is mandatory. fhir_token may be empty (Prompt Opinion empty-token
-    # regression observed 2026-04-26+). Downstream FHIR calls will surface their own
-    # auth error if the workspace FHIR endpoint requires a token.
+        return {
+            "error": "No patient_id provided and none in FHIR context. The Council requires an active patient context."
+        }
     if not fhir_url:
         return {"error": "FHIR URL not present in tool_context.state"}
 
-    # Open a convening_sessions row first — every other audit table FKs to it.
-    # If Supabase isn't configured, open_session returns None and we fall back
-    # to a synthetic id so the rest of the deliberation still runs.
     convening_id = state.get("convening_id") or await open_session(
         a2a_context_id=a2a_context_id,
         workspace_id=workspace_id,
@@ -107,10 +261,11 @@ async def convene_council(
     )
     if not convening_id:
         convening_id = uuid.uuid4().hex
-        logger.warning("supabase open_session unavailable; running with synthetic convening_id", convening_id=convening_id)
+        logger.warning(
+            "supabase open_session unavailable; running with synthetic convening_id",
+            convening_id=convening_id,
+        )
     state["convening_id"] = convening_id
-
-    overall_started = time.monotonic()
 
     fhir_metadata = {
         settings.fhir_extension_uri: {
@@ -122,6 +277,7 @@ async def convene_council(
         }
     }
 
+    # Record the kick-off synchronously so the UI shows the session immediately.
     await record_audit_event(
         convening_id=convening_id,
         actor="agent/convener",
@@ -129,158 +285,50 @@ async def convene_council(
         payload={"patient_id": patient_id, "focus_problem": focus_problem},
     )
 
-    # ── Round 1 — peer fan-out to all 8 specialties ─────────────────────
-    # Round 1 is hard-capped at 30s wallclock to fit inside Prompt Opinion's
-    # General Chat 60s LLM timeout. Slow specialties whose 429 retries don't
-    # finish in time are dropped from this round; the brief synthesizes from
-    # whatever views did complete (typically 5-7/8 — comfortably enough for
-    # a clinically meaningful concordance).
-    round1_prompt = ROUND_1_PROMPT_TEMPLATE.format(patient_id=patient_id, convening_id=convening_id)
-    if focus_problem:
-        round1_prompt += f"\n\nFocus problem: {focus_problem}\n"
-
-    calls = [PeerCall(specialty=spec, url=url, prompt=round1_prompt) for spec, url in all_specialty_urls()]
-    logger.info("round 1 fanout", n_peers=len(calls), convening_id=convening_id)
-
-    # Multi-region Vertex eliminates the 429-retry cliff — peers respond in
-    # 18-25s on warm Spaces. 35s wallclock cap captures most/all and still
-    # leaves ~20s for the brief synthesis inside PO's 60s ceiling.
-    results_r1 = await fan_out(
-        calls=calls,
-        context_id=a2a_context_id,
-        fhir_metadata=fhir_metadata,
-        timeout_seconds=35.0,
-        wallclock_cap_seconds=35.0,
-        max_concurrency=8,
-    )
-
-    views: list[dict[str, Any]] = []
-    for r in results_r1:
-        if r.success and r.structured_view:
-            # Force-normalize patient_id back to the canonical value. LLMs
-            # occasionally hallucinate single-digit transpositions in long
-            # UUIDs (live-observed: 1c237c73-0152-4250-... became -4220-),
-            # which the conflict-matrix safety check then rejects as
-            # "views span multiple patients". The patient_id is set by the
-            # caller, not the LLM, so we own it.
-            view = {**r.structured_view, "patient_id": patient_id}
-            views.append(view)
-            await record_agent_message(
-                convening_id=convening_id,
-                role=r.specialty,
-                direction="inbound",
-                content=view,
-                round_id=1,
-            )
-    if len(views) < 2:
-        msg = f"Round 1 yielded only {len(views)} valid SpecialtyViews — cannot synthesize concordance."
-        logger.error(msg)
-        await record_audit_event(
+    # Spawn the deliberation in the background. asyncio.create_task() returns
+    # immediately; the task continues running on the same event loop while
+    # this tool returns to the caller. We hold a reference to prevent the
+    # task from being garbage-collected mid-run.
+    task = asyncio.create_task(
+        _run_deliberation(
             convening_id=convening_id,
-            actor="agent/convener",
-            action="session_ended",
-            payload={"error": msg, "round1_results": [r.specialty + ":" + ("ok" if r.success else "fail") for r in results_r1]},
-        )
-        return {
-            "error": msg,
-            "partial_views": views,
-            "live_url": f"{settings.convene_ui_url}/?id={convening_id}",
-        }
-
-    # NOTE: previously we called get_council_conflict_matrix here, then a Round 2
-    # fan-out for any specialty involved in a conflict, then the brief. That
-    # serialised flow consistently exceeded the 60s ceiling. The brief LLM is
-    # already prompted to detect and resolve conflicts from views directly, so
-    # we synthesise straight from Round 1. The conflict_log inside the
-    # ConcordantPlan still reflects detected disagreements.
-    conflicts: list[dict[str, Any]] = []
-
-    # No pre-brief cooldown: PO's General Chat orchestrator has a hard ~60s
-    # LLM-window ceiling, and we've measured every second is needed.
-    # MCP-side gemini.ts retries (1.5s/3s) absorb a single 429 if the rolling
-    # quota happens to be hot.
-
-    # ── Concordance brief synthesis ─────────────────────────────────────
-    cb_started = time.monotonic()
-    try:
-        plan = await call_mcp_tool(
-            tool_name="get_concordance_brief",
-            arguments={
-                "views": views,
-                # Synthesize conflicts inline from views (skipped the separate
-                # MCP conflict_matrix call to fit inside PO's 60s ceiling).
-                "conflicts": {
-                    "patient_id": patient_id,
-                    "specialties": [v.get("specialty") for v in views],
-                    "conflicts": [],
-                    "agreements": [],
-                    "abstentions": [],
-                },
-                "total_messages": len(views),
-                "total_rounds": 1,
-            },
             fhir_url=fhir_url,
             fhir_token=fhir_token,
             patient_id=patient_id,
-            convening_id=convening_id,
-            specialty="convener",
-            round_id=1,
+            a2a_context_id=a2a_context_id,
+            fhir_metadata=fhir_metadata,
+            focus_problem=focus_problem,
         )
-    except Exception as brief_err:
-        # Brief synthesis failed (typically Vertex 429 on a hot trial-credit
-        # window). Don't crash the deliberation — return the Round 1 views as
-        # a degraded plan so the chat surface and convene-ui still have
-        # something to show. The audit trail in Supabase is intact.
-        msg = str(brief_err)
-        logger.warning("brief synthesis failed; returning Round-1 partial", err=msg)
-        await record_audit_event(
-            convening_id=convening_id,
-            actor="agent/convener",
-            action="session_ended",
-            payload={"error": f"brief_failed: {msg[:300]}", "n_views": len(views)},
-        )
-        await close_session(convening_id=convening_id)
-        return {
-            "status": "round1_only",
-            "message": (
-                f"Round 1 completed: {len(views)} specialty views captured. "
-                f"Concordance brief synthesis was unavailable (rate-limited by upstream model). "
-                f"Full views and audit trail are preserved at the live URL."
-            ),
-            "specialties_consulted": [v.get("specialty") for v in views],
-            "views": views,
-            "live_url": f"{settings.convene_ui_url}/?id={convening_id}",
-        }
-    await record_tool_call(
+    )
+    _BACKGROUND_TASKS.add(task)
+    task.add_done_callback(_BACKGROUND_TASKS.discard)
+
+    live_url = f"{settings.convene_ui_url}/?id={convening_id}"
+    logger.info(
+        "convene_council kicked off; deliberation runs in background",
         convening_id=convening_id,
-        tool_name="get_concordance_brief",
-        params={"n_views": len(views), "n_conflicts": len(conflicts)},
-        result={"n_actions": len(plan.get("action_items", []))},
-        status="success",
-        latency_ms=int((time.monotonic() - cb_started) * 1000),
+        live_url=live_url,
     )
 
-    await record_audit_event(
-        convening_id=convening_id,
-        actor="agent/convener",
-        action="plan_synthesized",
-        payload={"specialties": plan.get("specialties_consulted", []), "n_actions": len(plan.get("action_items", []))},
-    )
-    await record_audit_event(
-        convening_id=convening_id,
-        actor="agent/convener",
-        action="session_ended",
-        payload={"total_latency_ms": int((time.monotonic() - overall_started) * 1000)},
-    )
-    await close_session(convening_id=convening_id, plan_artifact=plan)
+    return {
+        "status": "deliberating",
+        "convening_id": convening_id,
+        "patient_id": patient_id,
+        "live_url": live_url,
+        "message": (
+            "The Council has begun deliberating on this patient. Eight specialty "
+            "agents are reviewing the chart in parallel and will synthesize a "
+            "ConcordantPlan in ~30-60 seconds. The deliberation streams live at "
+            "the URL above — audit timeline, per-specialty consult notes, "
+            "conflict resolution, and the final plan all render in real time."
+        ),
+    }
 
-    # Attach a public live-deliberation URL so the chat UX can link out to the
-    # full audit trail + rich plan rendering. Independent of whether PO's
-    # General Chat times out before this returns: the convening row plus all
-    # audit events are already persisted in Supabase, and the UI renders from
-    # there in real time.
-    plan["live_url"] = f"{settings.convene_ui_url}/?id={convening_id}"
-    return plan
+
+# Holding strong references to in-flight background tasks prevents them from
+# being garbage-collected before they complete (asyncio.create_task only
+# weak-refs by default).
+_BACKGROUND_TASKS: set[asyncio.Task[Any]] = set()
 
 
 SYSTEM_INSTRUCTION = """\
@@ -290,37 +338,22 @@ You facilitate, you don't decide. The specialty agents own their domain expertis
 
 CRITICAL: When you receive ANY consultation request (e.g. "consult with the Convener", "convene the Council", "review this patient", "please consult on this patient"), IMMEDIATELY call the convene_council tool. Do NOT ask the user for a patient ID — the FHIR context that the platform attaches to your invocation already includes the active patient. The convene_council tool reads it from your state automatically.
 
-Your workflow:
-1. Receive the consultation request from the platform's General Chat.
-2. Call `convene_council()` with no arguments (patient_id defaults to the one in FHIR context). If the user mentions a specific clinical question, pass it as `focus_problem`.
-3. The convene_council tool runs the deliberation: parallel Round 1 fan-out to all 8 specialty agents (capped at 30s wallclock to fit inside General Chat), then synthesises a ConcordantPlan via the lens-MCP that detects and resolves conflicts inline. Slow specialty replies are dropped from the brief — the plan still synthesises from the 5-7 specialties that respond in time.
-4. Return the resulting ConcordantPlan as your final response, formatted clearly with the brief summary, conflict log, and action items.
+The convene_council tool returns within ~5 seconds with a live deliberation URL. The deliberation itself (Round 1 fan-out to 8 specialty agents + concordance brief synthesis) runs in the background and streams to the URL in real time.
 
-You do NOT route between specialties yourself. The convene_council tool handles all peer A2A traffic deterministically. Your job is to receive the request, immediately kick off convene_council, and present the resulting plan back to the caller.
+Once the tool returns, format a SHORT chat response (under 120 words) with this exact structure:
 
-CHAT-RESPONSE FORMAT (CRITICAL — keep tight, the chat surface has a 60s LLM ceiling):
+**🏛️ The Council has convened.**
+One sentence: which patient and what's being deliberated (e.g. "Eight specialty agents are now reviewing Mrs. Chen's case in parallel — perioperative anticoagulation, T2DM intensification, CKD-aware dosing, and post-lumpectomy adjuvant therapy.")
 
-Your reply must be SHORT — under ~250 words total. Verbose plans cause Prompt Opinion's
-General Chat to time out summarising and the user sees a "took too long" banner.
+**📺 Watch the deliberation live:** [link](<live_url>)
 
-Use this exact structure (Markdown):
-
-**Council deliberation summary**
-One short sentence on the patient and what was decided.
-
-**Top action items** (3-5 bullets, the most consequential ones with priority + owner)
-
-**Notable dissent** (1 line if there is one in the plan; omit this section otherwise)
-
-**📺 Full deliberation:** [live link](<live_url>)
-> Audit trail, all specialty consult notes, conflict resolutions, and complete continue/start/stop/monitor lists render at the link above. ConcordantPlan is persisted; this link is shareable and stays live.
+The full ConcordantPlan — continue/start/stop/monitor lists, action items with priority, conflict resolutions, preserved dissents, every specialty's consult note, and the audit trail — renders at the link above as the agents complete their analyses (~30-60 seconds).
 
 Rules:
 - Take `live_url` directly from the convene_council tool result.
-- Pick the highest-priority 3-5 action items. Skip the rest.
-- Do NOT regurgitate the full plan in the chat — that's what convene-ui is for.
-- Do NOT add a closing "let me know if you'd like more detail" boilerplate.
-- If the tool returns `status: round1_only` (brief synthesis was rate-limited), say so plainly in one line and direct the user to the live link for the partial views.
+- Do NOT wait for or attempt to display the plan inline — it does not exist yet at this point. The live link is the deliverable.
+- Do NOT add boilerplate like "let me know if you'd like more detail." Skip it.
+- Speak in clinician-facing language. The patient is referenced by their de-identified summary, not by name in chat.
 """
 
 
