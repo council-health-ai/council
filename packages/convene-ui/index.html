@@ -83,15 +83,18 @@
   .title-strip .subtitle { margin-top: 8px; color: var(--ink-2); font-size: 14px; max-width: 760px; }
 
   /* ── Tab bar ───────────────────────────────────────────────────────── */
-  .tabs { display: flex; gap: 0; max-width: 1320px; margin: 24px auto 0; padding: 0 32px; border-bottom: 1px solid var(--rule); }
+  .tabs { display: flex; gap: 0; max-width: 1320px; margin: 24px auto 0; padding: 0; border-bottom: 1px solid var(--rule); }
   .tab {
-    background: none; border: none; padding: 12px 18px 14px; font: inherit; font-size: 14px; color: var(--ink-2);
+    background: none; border: none; padding: 14px 18px 16px; font: inherit; font-size: 14px; color: var(--ink-2);
     cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; font-weight: 500; letter-spacing: -0.005em;
-    transition: color 0.15s ease, border-color 0.15s ease;
-    display: inline-flex; align-items: center; gap: 8px;
+    transition: color 0.15s ease, border-color 0.15s ease, background 0.15s ease;
+    display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+    flex: 1 1 0;
+    text-align: center;
   }
-  .tab:hover { color: var(--navy-700); }
-  .tab.active { color: var(--navy-900); border-bottom-color: var(--sage-500); font-weight: 600; }
+  .tab:not(:last-child) { border-right: 1px solid var(--rule-2); }
+  .tab:hover { color: var(--navy-700); background: rgba(13, 36, 56, 0.02); }
+  .tab.active { color: var(--navy-900); border-bottom-color: var(--sage-500); font-weight: 600; background: var(--paper-2); }
   .tab .count { font-size: 11px; padding: 2px 7px; background: var(--rule-2); border-radius: 100px; color: var(--ink-2); font-weight: 500; font-family: var(--mono); }
   .tab.active .count { background: var(--sage-100); color: var(--sage-700); }
 
@@ -360,7 +363,7 @@
     </div>
     <div class="links">
       <a href="https://github.com/council-health-ai/council" target="_blank" rel="noopener">Source</a>
-      <a href="https://sharponmcp.com" target="_blank" rel="noopener">SHARP-on-MCP</</a>
+      <a href="https://sharponmcp.com" target="_blank" rel="noopener">SHARP-on-MCP</a>
     </div>
   </div>
 </footer>
@@ -525,7 +528,16 @@
   function renderPlan() {
     const root = document.getElementById("plan-content");
     if (!state.plan) {
-      root.innerHTML = `<div class="empty-state">Plan will appear once the Council finishes synthesising.</div>`;
+      const ss = state.sessionStatus;
+      let msg;
+      if (!state.sessionId) {
+        msg = "Open a session URL (<span class=\"mono\">?id=…</span>) to view a deliberation.";
+      } else if (ss === "active") {
+        msg = `The Council is still deliberating. The plan will render here as soon as the brief is synthesised — see <a href="#deliberation">Live Deliberation</a> for in-flight progress.`;
+      } else {
+        msg = `This session ended without a synthesised plan. See <a href="#consults">Specialty Consults</a> for partial views and <a href="#audit">Audit Log</a> for what happened.`;
+      }
+      root.innerHTML = `<div class="empty-state" style="text-align:left;line-height:1.6;font-style:normal;color:var(--ink-2);padding:32px 0;">${msg}</div>`;
       return;
     }
     const p = state.plan;
@@ -733,6 +745,16 @@
         state.specialties[spec] = { ...(state.specialties[spec] || {}), status: "thinking" };
       } else if (e.action === "tool_returned") {
         state.specialties[spec] = { ...(state.specialties[spec] || {}), status: "done" };
+      }
+    }
+    // When the convening ends, sweep any specialty still "thinking" — its
+    // tool call never returned (Vertex 429, timeout, peer crash) — and mark
+    // it as error so the roster reflects reality instead of a false pulse.
+    if (e.action === "session_ended") {
+      for (const [spec, meta] of Object.entries(state.specialties)) {
+        if (meta.status === "thinking") {
+          state.specialties[spec] = { ...meta, status: "error" };
+        }
       }
     }
   }
