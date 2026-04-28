@@ -145,12 +145,43 @@ def _extract_view(responses: list[Any]) -> tuple[str | None, dict[str, Any] | No
     if not final_text:
         return None, None
 
+    # Try plain JSON parse first
     try:
         parsed = json.loads(final_text)
         if isinstance(parsed, dict) and "specialty" in parsed:
             return final_text, parsed
     except json.JSONDecodeError:
         pass
+
+    # Tolerate ```json ... ``` markdown fences (LLMs love wrapping JSON in code blocks)
+    fence_match = None
+    for marker in ("```json", "```JSON", "```"):
+        if marker in final_text:
+            after = final_text.split(marker, 1)[1]
+            end_idx = after.find("```")
+            if end_idx > 0:
+                fence_match = after[:end_idx].strip()
+                break
+    if fence_match:
+        try:
+            parsed = json.loads(fence_match)
+            if isinstance(parsed, dict) and "specialty" in parsed:
+                return final_text, parsed
+        except json.JSONDecodeError:
+            pass
+
+    # Tolerate JSON embedded in surrounding prose: find first {...} balanced block
+    first_brace = final_text.find("{")
+    last_brace = final_text.rfind("}")
+    if first_brace >= 0 and last_brace > first_brace:
+        candidate = final_text[first_brace : last_brace + 1]
+        try:
+            parsed = json.loads(candidate)
+            if isinstance(parsed, dict) and "specialty" in parsed:
+                return final_text, parsed
+        except json.JSONDecodeError:
+            pass
+
     return final_text, None
 
 
