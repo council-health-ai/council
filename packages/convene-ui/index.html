@@ -3,200 +3,756 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>The Council — live deliberation</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Ctext y='13' font-size='14'%3E🏛️%3C/text%3E%3C/svg%3E" />
+<title>Council Health — Live Deliberation</title>
+<link rel="icon" type="image/png" href="logo.png" />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
+  /* ── Brand palette (from logo) ──────────────────────────────────────── */
   :root {
-    --bg: #0d1014;
-    --bg-1: #131820;
-    --bg-2: #1c232f;
-    --text: #e7ecf2;
-    --muted: #8b96a8;
-    --line: #232b38;
-    --accent: #7dd3fc;
-    --good: #4ade80;
-    --warn: #fbbf24;
-    --bad: #f87171;
-    --card: rgba(255,255,255,0.04);
-    --shadow: 0 1px 0 rgba(255,255,255,0.05) inset, 0 0 0 1px var(--line);
+    --navy-900: #0d2438;
+    --navy-700: #1a3a52;
+    --navy-500: #2a5a7c;
+    --navy-100: #e8eef4;
+    --sage-700: #4a8568;
+    --sage-500: #6fa882;
+    --sage-100: #e6efe9;
+
+    --paper:    #f8f6f1;
+    --paper-2:  #ffffff;
+    --ink:      #14283d;
+    --ink-2:    #4a6079;
+    --ink-3:    #8595a8;
+    --rule:     #e2dfd6;
+    --rule-2:   #ecead9;
+    --warn:     #b07a1a;
+    --bad:      #b04545;
+    --good:     #4a8568;
+
+    --serif: "Fraunces", "Iowan Old Style", Georgia, serif;
+    --sans:  "Inter", -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif;
+    --mono:  "JetBrains Mono", ui-monospace, "SF Mono", monospace;
+
+    --radius: 4px;
+    --shadow-card: 0 1px 0 rgba(13, 36, 56, 0.04), 0 0 0 1px var(--rule);
   }
+
+  /* ── Reset + base ──────────────────────────────────────────────────── */
   *, *::before, *::after { box-sizing: border-box; }
-  html, body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.55 -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, sans-serif; }
-  a { color: var(--accent); text-decoration: none; }
-  a:hover { text-decoration: underline; }
-
-  header {
-    padding: 20px 32px 18px;
-    border-bottom: 1px solid var(--line);
-    display: flex; align-items: center; justify-content: space-between;
-    background: linear-gradient(180deg, var(--bg-1) 0%, var(--bg) 100%);
+  html, body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font: 15px/1.55 var(--sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
   }
-  header .brand { display: flex; align-items: baseline; gap: 12px; }
-  header .brand .logo { font-size: 22px; }
-  header .brand .name { font-weight: 600; letter-spacing: 0.02em; }
-  header .brand .tag { color: var(--muted); font-size: 12px; }
-  header .session { color: var(--muted); font-size: 12px; font-family: ui-monospace, "SF Mono", monospace; }
+  a { color: var(--navy-500); text-decoration: underline; text-decoration-thickness: 1px; text-underline-offset: 2px; }
+  a:hover { color: var(--navy-700); }
+  h1, h2, h3 { font-family: var(--serif); font-weight: 500; letter-spacing: -0.01em; color: var(--navy-900); }
+  h1 { font-size: 32px; line-height: 1.15; margin: 0; }
+  h2 { font-size: 22px; line-height: 1.2; margin: 0 0 18px; font-weight: 600; }
+  h3 { font-size: 16px; line-height: 1.3; margin: 0 0 8px; font-weight: 600; }
+  p  { margin: 0 0 12px; }
 
-  main { max-width: 1200px; margin: 0 auto; padding: 28px 32px 80px; display: grid; grid-template-columns: 1fr 1.4fr; gap: 28px; }
-  @media (max-width: 900px) { main { grid-template-columns: 1fr; } }
+  .mono { font-family: var(--mono); font-size: 12px; letter-spacing: 0.02em; }
 
-  .panel { background: var(--card); border-radius: 12px; box-shadow: var(--shadow); padding: 18px 20px; }
-  .panel h2 { margin: 0 0 12px; font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); font-weight: 600; }
+  /* ── Top bar ───────────────────────────────────────────────────────── */
+  .topbar {
+    background: var(--paper-2);
+    border-bottom: 1px solid var(--rule);
+  }
+  .topbar-inner {
+    max-width: 1240px;
+    margin: 0 auto;
+    padding: 18px 32px;
+    display: flex;
+    align-items: center;
+    gap: 18px;
+  }
+  .brand {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .brand img {
+    width: 44px;
+    height: 44px;
+    object-fit: contain;
+  }
+  .brand-text {
+    line-height: 1.1;
+  }
+  .brand-text .name {
+    font-family: var(--serif);
+    font-size: 19px;
+    font-weight: 600;
+    color: var(--navy-900);
+    letter-spacing: 0.02em;
+  }
+  .brand-text .tag {
+    font-size: 11px;
+    color: var(--sage-700);
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    margin-top: 2px;
+    font-weight: 500;
+  }
+  .topbar-spacer { flex: 1; }
+  .session-meta {
+    text-align: right;
+    color: var(--ink-3);
+    font-size: 12px;
+    line-height: 1.4;
+  }
+  .session-meta .id {
+    font-family: var(--mono);
+    color: var(--ink-2);
+  }
+  .status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 100px;
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    border: 1px solid var(--rule);
+  }
+  .status-pill .dot {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: var(--ink-3);
+  }
+  .status-pill.active { color: var(--sage-700); border-color: rgba(111, 168, 130, 0.35); background: var(--sage-100); }
+  .status-pill.active .dot { background: var(--sage-500); animation: pulse-dot 2s ease-in-out infinite; }
+  .status-pill.completed { color: var(--navy-700); border-color: rgba(42, 90, 124, 0.2); background: var(--navy-100); }
+  .status-pill.completed .dot { background: var(--navy-500); }
 
-  .specialty-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
-  .specialty-row { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 8px; background: rgba(255,255,255,0.02); border: 1px solid var(--line); font-size: 13px; }
-  .specialty-row .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); flex-shrink: 0; }
-  .specialty-row.idle .dot { background: var(--muted); animation: none; }
-  .specialty-row.thinking .dot { background: var(--warn); animation: pulse 1.4s ease-in-out infinite; }
-  .specialty-row.done .dot { background: var(--good); }
-  .specialty-row.error .dot { background: var(--bad); }
-  .specialty-row .name { flex: 1; text-transform: capitalize; }
-  .specialty-row .latency { color: var(--muted); font-size: 11px; font-family: ui-monospace, monospace; }
-
-  @keyframes pulse {
-    0%, 100% { opacity: 0.4; transform: scale(1); }
-    50% { opacity: 1; transform: scale(1.4); }
+  @keyframes pulse-dot {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.35; }
   }
 
-  .timeline { display: flex; flex-direction: column; gap: 8px; max-height: 540px; overflow-y: auto; padding-right: 4px; }
-  .timeline::-webkit-scrollbar { width: 6px; }
-  .timeline::-webkit-scrollbar-thumb { background: var(--line); border-radius: 3px; }
-  .event { display: flex; gap: 10px; padding: 8px 12px; border-radius: 8px; font-size: 13px; background: rgba(255,255,255,0.02); border-left: 2px solid var(--line); animation: slideIn 0.3s ease; }
-  .event.session_started { border-color: var(--accent); }
-  .event.tool_called { border-color: var(--warn); }
-  .event.tool_returned { border-color: var(--good); }
-  .event.plan_synthesized { border-color: var(--accent); background: rgba(125, 211, 252, 0.08); }
-  .event.session_ended { border-color: var(--muted); }
-  .event .time { color: var(--muted); font-family: ui-monospace, monospace; font-size: 11px; flex-shrink: 0; min-width: 60px; }
-  .event .actor { color: var(--accent); font-family: ui-monospace, monospace; font-size: 11px; flex-shrink: 0; min-width: 130px; }
-  .event .what { flex: 1; color: var(--text); }
+  /* ── Page header card ──────────────────────────────────────────────── */
+  .page-header {
+    max-width: 1240px;
+    margin: 0 auto;
+    padding: 36px 32px 24px;
+  }
+  .eyebrow {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.2em;
+    color: var(--sage-700);
+    font-weight: 600;
+    margin-bottom: 10px;
+  }
+  .page-header h1 .accent {
+    color: var(--sage-700);
+    font-style: italic;
+    font-weight: 400;
+  }
+  .page-header .subtitle {
+    margin-top: 12px;
+    color: var(--ink-2);
+    font-size: 16px;
+    max-width: 720px;
+  }
 
-  @keyframes slideIn {
-    from { opacity: 0; transform: translateX(-4px); }
+  /* ── Layout ─────────────────────────────────────────────────────────── */
+  main {
+    max-width: 1240px;
+    margin: 0 auto;
+    padding: 0 32px 80px;
+    display: grid;
+    grid-template-columns: 360px 1fr;
+    gap: 32px;
+    align-items: start;
+  }
+  @media (max-width: 960px) {
+    main { grid-template-columns: 1fr; }
+  }
+
+  .card {
+    background: var(--paper-2);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    padding: 24px;
+  }
+  .card .label {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    color: var(--ink-3);
+    font-weight: 600;
+    margin-bottom: 14px;
+  }
+
+  /* ── Specialty roster ──────────────────────────────────────────────── */
+  .roster { display: flex; flex-direction: column; gap: 0; }
+  .roster-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 11px 2px;
+    border-bottom: 1px solid var(--rule-2);
+    font-size: 14px;
+  }
+  .roster-row:last-child { border-bottom: none; }
+  .roster-row .indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--ink-3);
+    opacity: 0.4;
+    flex-shrink: 0;
+  }
+  .roster-row.idle    .indicator { background: var(--ink-3); opacity: 0.25; }
+  .roster-row.thinking .indicator {
+    background: var(--warn);
+    opacity: 1;
+    box-shadow: 0 0 0 0 rgba(176, 122, 26, 0.6);
+    animation: pulse-ring 1.6s ease-in-out infinite;
+  }
+  .roster-row.done .indicator { background: var(--sage-500); opacity: 1; }
+  .roster-row.error .indicator { background: var(--bad); opacity: 1; }
+
+  @keyframes pulse-ring {
+    0% { box-shadow: 0 0 0 0 rgba(176, 122, 26, 0.55); }
+    70% { box-shadow: 0 0 0 8px rgba(176, 122, 26, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(176, 122, 26, 0); }
+  }
+
+  .roster-row .name { flex: 1; font-weight: 500; color: var(--navy-900); letter-spacing: -0.005em; }
+  .roster-row .latency { font-family: var(--mono); font-size: 11px; color: var(--ink-3); }
+
+  /* ── Stats ─────────────────────────────────────────────────────────── */
+  .stats {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 14px 18px;
+    margin-top: 20px;
+    padding-top: 20px;
+    border-top: 1px solid var(--rule-2);
+  }
+  .stat .v {
+    font-family: var(--serif);
+    font-size: 26px;
+    font-weight: 500;
+    color: var(--navy-900);
+    line-height: 1;
+  }
+  .stat .k {
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--ink-3);
+    margin-top: 4px;
+    font-weight: 500;
+  }
+
+  /* ── Timeline ──────────────────────────────────────────────────────── */
+  .timeline-card { padding: 24px 0; }
+  .timeline-card .label { padding: 0 24px; }
+  .timeline {
+    max-height: 420px;
+    overflow-y: auto;
+    padding: 0 24px;
+  }
+  .timeline::-webkit-scrollbar { width: 4px; }
+  .timeline::-webkit-scrollbar-thumb { background: var(--rule); border-radius: 2px; }
+  .event {
+    display: grid;
+    grid-template-columns: 56px 1fr;
+    gap: 12px;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--rule-2);
+    font-size: 13px;
+    animation: slide-in 0.3s ease;
+  }
+  .event:last-child { border-bottom: none; }
+  .event .when {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--ink-3);
+    padding-top: 1px;
+  }
+  .event .body { color: var(--ink-2); line-height: 1.45; }
+  .event .body .actor {
+    color: var(--navy-700);
+    font-weight: 500;
+    text-transform: capitalize;
+  }
+  .event.flag { background: linear-gradient(90deg, var(--sage-100) 0%, transparent 100%); padding-left: 8px; margin-left: -8px; padding-right: 8px; margin-right: -8px; border-radius: 2px; }
+  .event.flag .body { color: var(--navy-900); font-weight: 500; }
+
+  @keyframes slide-in {
+    from { opacity: 0; transform: translateX(-3px); }
     to { opacity: 1; transform: translateX(0); }
   }
 
-  .plan { max-width: 1200px; margin: 0 auto; padding: 0 32px; display: none; }
-  .plan.visible { display: block; padding-bottom: 80px; }
-  .plan h2 { margin: 32px 0 12px; font-size: 16px; letter-spacing: 0.04em; }
+  /* ── Plan: clinical document feel ──────────────────────────────────── */
+  .plan-doc { display: none; }
+  .plan-doc.visible { display: block; }
+  .plan-doc .doc-meta {
+    display: flex;
+    gap: 24px;
+    align-items: baseline;
+    margin-bottom: 24px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid var(--rule);
+    color: var(--ink-3);
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    font-weight: 500;
+  }
+  .plan-doc .doc-meta strong { color: var(--ink); font-weight: 600; }
 
-  .plan-summary { background: linear-gradient(135deg, rgba(125, 211, 252, 0.06), rgba(74, 222, 128, 0.04)); padding: 24px; border-radius: 12px; box-shadow: var(--shadow); }
-  .plan-summary p { margin: 0 0 12px; }
-  .plan-summary .rationale { color: var(--muted); font-size: 14px; }
+  .doc-section { margin-bottom: 36px; }
+  .doc-section .section-eyebrow {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.22em;
+    color: var(--sage-700);
+    font-weight: 600;
+    margin-bottom: 8px;
+  }
+  .doc-section h2 { margin-bottom: 14px; }
 
-  .plan-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 14px; margin-top: 18px; }
-  @media (max-width: 800px) { .plan-grid { grid-template-columns: 1fr; } }
-  .plan-card { background: var(--card); padding: 18px; border-radius: 10px; box-shadow: var(--shadow); }
-  .plan-card h3 { margin: 0 0 10px; font-size: 13px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
-  .plan-card.continue h3 { color: var(--good); }
-  .plan-card.start h3 { color: var(--accent); }
-  .plan-card.stop h3 { color: var(--bad); }
-  .plan-card.monitor h3 { color: var(--warn); }
-  .plan-card ul { margin: 0; padding-left: 20px; }
-  .plan-card li { margin: 6px 0; font-size: 14px; }
+  .summary-block p:first-child {
+    font-family: var(--serif);
+    font-size: 18px;
+    line-height: 1.5;
+    color: var(--navy-900);
+    font-weight: 400;
+  }
+  .summary-block .rationale {
+    color: var(--ink-2);
+    font-size: 14px;
+    line-height: 1.6;
+  }
 
-  .actions, .conflicts, .dissents { margin-top: 18px; }
-  .action-item, .conflict-item, .dissent-item { background: var(--card); padding: 14px 18px; border-radius: 8px; margin-bottom: 10px; box-shadow: var(--shadow); }
-  .action-item .meta { display: flex; gap: 12px; margin-top: 6px; font-size: 12px; color: var(--muted); }
-  .action-item .priority { padding: 2px 8px; border-radius: 4px; font-weight: 600; text-transform: uppercase; font-size: 10px; letter-spacing: 0.06em; }
-  .priority.urgent { background: rgba(248, 113, 113, 0.15); color: var(--bad); }
-  .priority.high { background: rgba(251, 191, 36, 0.15); color: var(--warn); }
-  .priority.routine { background: rgba(125, 211, 252, 0.15); color: var(--accent); }
+  /* ── 5T plan grid ──────────────────────────────────────────────────── */
+  .plan-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+  }
+  @media (max-width: 720px) { .plan-grid { grid-template-columns: 1fr; } }
+  .plan-quadrant {
+    background: var(--paper-2);
+    border: 1px solid var(--rule);
+    border-left: 3px solid var(--rule);
+    padding: 18px 22px;
+    border-radius: var(--radius);
+  }
+  .plan-quadrant.continue { border-left-color: var(--sage-500); }
+  .plan-quadrant.start    { border-left-color: var(--navy-500); }
+  .plan-quadrant.stop     { border-left-color: var(--bad); }
+  .plan-quadrant.monitor  { border-left-color: var(--warn); }
+  .plan-quadrant h3 {
+    font-family: var(--sans);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--ink-3);
+  }
+  .plan-quadrant.continue h3 { color: var(--sage-700); }
+  .plan-quadrant.start    h3 { color: var(--navy-700); }
+  .plan-quadrant.stop     h3 { color: var(--bad); }
+  .plan-quadrant.monitor  h3 { color: var(--warn); }
+  .plan-quadrant ul { margin: 0; padding-left: 18px; }
+  .plan-quadrant li {
+    margin: 6px 0;
+    font-size: 14px;
+    color: var(--ink);
+    line-height: 1.5;
+  }
+  .plan-quadrant.empty li { color: var(--ink-3); font-style: italic; }
 
-  .conflict-item .topic { font-weight: 600; margin-bottom: 6px; }
-  .conflict-item .resolution { color: var(--muted); font-size: 13px; margin-top: 6px; }
-  .conflict-item .method { display: inline-block; padding: 2px 8px; border-radius: 4px; background: rgba(125, 211, 252, 0.15); color: var(--accent); font-size: 11px; margin-left: 8px; text-transform: lowercase; }
-  .conflict-item .method.unresolved { background: rgba(248, 113, 113, 0.15); color: var(--bad); }
-  .conflict-item .positions { margin-top: 8px; padding-left: 16px; font-size: 13px; color: var(--muted); }
+  /* ── Action items ──────────────────────────────────────────────────── */
+  .action {
+    background: var(--paper-2);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    padding: 16px 20px;
+    margin-bottom: 10px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 14px;
+    align-items: start;
+  }
+  .action .desc {
+    font-size: 14px;
+    color: var(--ink);
+    line-height: 1.5;
+  }
+  .action .meta {
+    display: flex;
+    gap: 10px;
+    margin-top: 8px;
+    font-size: 12px;
+    color: var(--ink-3);
+  }
+  .action .meta strong { color: var(--ink-2); font-weight: 500; }
 
-  .dissent-item { border-left: 3px solid var(--warn); }
-  .dissent-item .specialty { font-weight: 600; color: var(--warn); margin-bottom: 4px; text-transform: capitalize; }
-  .dissent-item .position { font-size: 14px; margin-bottom: 6px; }
-  .dissent-item .rationale { color: var(--muted); font-size: 13px; }
+  .priority {
+    align-self: start;
+    padding: 4px 10px;
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+    border-radius: 100px;
+    border: 1px solid;
+    white-space: nowrap;
+  }
+  .priority.urgent  { background: rgba(176, 69, 69, 0.06); color: var(--bad); border-color: rgba(176, 69, 69, 0.25); }
+  .priority.high    { background: rgba(176, 122, 26, 0.06); color: var(--warn); border-color: rgba(176, 122, 26, 0.25); }
+  .priority.routine { background: var(--navy-100); color: var(--navy-700); border-color: rgba(42, 90, 124, 0.18); }
 
-  .empty { color: var(--muted); font-size: 13px; padding: 24px; text-align: center; }
+  /* ── Conflict log ──────────────────────────────────────────────────── */
+  .conflict {
+    background: var(--paper-2);
+    border: 1px solid var(--rule);
+    border-left: 3px solid var(--warn);
+    border-radius: var(--radius);
+    padding: 18px 22px;
+    margin-bottom: 12px;
+  }
+  .conflict .topic {
+    font-weight: 600;
+    color: var(--navy-900);
+    margin-bottom: 4px;
+    font-size: 15px;
+  }
+  .conflict .method-pill {
+    display: inline-block;
+    padding: 2px 9px;
+    background: var(--sage-100);
+    color: var(--sage-700);
+    font-size: 11px;
+    text-transform: lowercase;
+    border-radius: 100px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    margin-left: 8px;
+    border: 1px solid rgba(111, 168, 130, 0.25);
+  }
+  .conflict .method-pill.unresolved { background: rgba(176, 69, 69, 0.06); color: var(--bad); border-color: rgba(176, 69, 69, 0.25); }
+  .conflict .positions {
+    margin: 12px 0 0;
+    padding: 0;
+    list-style: none;
+  }
+  .conflict .positions li {
+    font-size: 13px;
+    color: var(--ink-2);
+    margin: 8px 0;
+    padding-left: 12px;
+    border-left: 2px solid var(--rule);
+  }
+  .conflict .positions li strong {
+    color: var(--navy-700);
+    text-transform: capitalize;
+    font-weight: 600;
+  }
+  .conflict .resolution {
+    margin-top: 14px;
+    padding-top: 12px;
+    border-top: 1px solid var(--rule-2);
+    color: var(--ink);
+    font-size: 14px;
+    line-height: 1.55;
+  }
+  .conflict .resolution strong { color: var(--navy-900); }
 
-  .specialty-views { margin-top: 28px; }
-  .view-card { background: var(--card); padding: 18px; border-radius: 10px; box-shadow: var(--shadow); margin-bottom: 12px; }
-  .view-card .specialty-name { font-weight: 600; text-transform: capitalize; color: var(--accent); margin-bottom: 8px; font-size: 14px; }
-  .view-card .summary { font-size: 13px; color: var(--muted); margin-bottom: 10px; }
-  .view-card details { margin-top: 8px; }
-  .view-card details summary { color: var(--muted); cursor: pointer; font-size: 12px; }
-  .view-card details summary:hover { color: var(--text); }
-  .view-card .concerns, .view-card .red-flags { margin-top: 8px; padding-left: 16px; font-size: 13px; }
-  .view-card .red-flags li { color: var(--bad); }
+  /* ── Dissent ───────────────────────────────────────────────────────── */
+  .dissent {
+    background: var(--paper-2);
+    border: 1px solid var(--rule);
+    border-left: 3px solid var(--bad);
+    border-radius: var(--radius);
+    padding: 18px 22px;
+    margin-bottom: 12px;
+  }
+  .dissent .who {
+    font-weight: 600;
+    color: var(--bad);
+    text-transform: capitalize;
+    font-size: 13px;
+    letter-spacing: 0.02em;
+    margin-bottom: 6px;
+  }
+  .dissent .position {
+    font-size: 15px;
+    color: var(--navy-900);
+    margin-bottom: 8px;
+    font-family: var(--serif);
+    font-style: italic;
+    line-height: 1.5;
+  }
+  .dissent .rationale {
+    color: var(--ink-2);
+    font-size: 13px;
+    line-height: 1.6;
+  }
 
-  .audit-summary { display: flex; gap: 24px; margin-top: 12px; padding: 12px 0; border-top: 1px solid var(--line); color: var(--muted); font-size: 12px; }
-  .audit-summary .stat strong { color: var(--text); display: block; font-size: 16px; }
+  /* ── Specialty views (consult notes) ───────────────────────────────── */
+  .views-stack { display: flex; flex-direction: column; gap: 12px; }
+  .view {
+    background: var(--paper-2);
+    border: 1px solid var(--rule);
+    border-radius: var(--radius);
+    padding: 20px 24px;
+  }
+  .view-header {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 10px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid var(--rule-2);
+  }
+  .view-header .specialty {
+    font-family: var(--serif);
+    font-size: 17px;
+    font-weight: 600;
+    color: var(--navy-900);
+    text-transform: capitalize;
+    letter-spacing: -0.01em;
+  }
+  .view-header .role {
+    font-size: 11px;
+    color: var(--ink-3);
+    text-transform: uppercase;
+    letter-spacing: 0.16em;
+  }
+  .view .summary {
+    color: var(--ink-2);
+    font-size: 14px;
+    line-height: 1.6;
+    margin-bottom: 12px;
+  }
+  .view-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 18px;
+    margin-top: 8px;
+  }
+  @media (max-width: 720px) { .view-grid { grid-template-columns: 1fr; } }
+  .view-grid .col h4 {
+    font-family: var(--sans);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.18em;
+    color: var(--ink-3);
+    font-weight: 600;
+    margin: 0 0 6px;
+  }
+  .view-grid .col ul { margin: 0; padding-left: 16px; font-size: 13px; line-height: 1.5; color: var(--ink-2); }
+  .view-grid .col li { margin: 3px 0; }
+  .view-grid .col.flags li { color: var(--bad); }
+  .view-guideline-row {
+    margin-top: 14px;
+    padding-top: 10px;
+    border-top: 1px solid var(--rule-2);
+    font-size: 12px;
+    color: var(--ink-3);
+  }
+  .view-guideline-row strong { color: var(--ink-2); font-weight: 500; }
+  .view details { margin-top: 12px; }
+  .view details summary {
+    font-size: 12px;
+    color: var(--ink-3);
+    cursor: pointer;
+    list-style: none;
+    user-select: none;
+  }
+  .view details summary::-webkit-details-marker { display: none; }
+  .view details summary::after { content: "▾"; margin-left: 6px; opacity: 0.5; transition: transform 0.15s; display: inline-block; }
+  .view details[open] summary::after { transform: rotate(180deg); }
+  .view details .reasoning {
+    margin: 10px 0 0;
+    padding: 12px 14px;
+    background: var(--paper);
+    border: 1px solid var(--rule-2);
+    border-radius: var(--radius);
+    font-size: 12px;
+    line-height: 1.55;
+    color: var(--ink-2);
+  }
+  .view details .reasoning ol { margin: 0; padding-left: 18px; }
 
-  .footer { color: var(--muted); font-size: 12px; padding: 24px 32px; text-align: center; border-top: 1px solid var(--line); margin-top: 40px; }
-  .footer a { color: var(--accent); }
+  .empty-state {
+    color: var(--ink-3);
+    font-size: 13px;
+    padding: 18px 0;
+    font-style: italic;
+  }
+
+  /* ── Footer ────────────────────────────────────────────────────────── */
+  footer {
+    border-top: 1px solid var(--rule);
+    padding: 28px 32px 60px;
+    color: var(--ink-3);
+    font-size: 12px;
+  }
+  footer .footer-inner {
+    max-width: 1240px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 16px;
+  }
+  footer .colophon {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  footer .colophon img { width: 18px; height: 18px; opacity: 0.65; }
+  footer .links a { color: var(--ink-2); margin-left: 16px; text-decoration: none; }
+  footer .links a:hover { color: var(--navy-700); text-decoration: underline; }
+
+  /* ── Loading shimmer ───────────────────────────────────────────────── */
+  .shimmer {
+    background: linear-gradient(90deg, var(--rule-2) 0%, var(--paper-2) 50%, var(--rule-2) 100%);
+    background-size: 200% 100%;
+    animation: shimmer 1.4s ease-in-out infinite;
+    border-radius: var(--radius);
+  }
+  @keyframes shimmer {
+    0% { background-position: -100% 0; }
+    100% { background-position: 100% 0; }
+  }
 </style>
 </head>
 <body>
 
-<header>
-  <div class="brand">
-    <span class="logo">🏛️</span>
-    <div>
-      <span class="name">The Council</span>
-      <span class="tag" style="margin-left: 12px;">live deliberation</span>
+<div class="topbar">
+  <div class="topbar-inner">
+    <div class="brand">
+      <img src="logo.png" alt="Council Health" />
+      <div class="brand-text">
+        <div class="name">Council Health</div>
+        <div class="tag">Live deliberation</div>
+      </div>
+    </div>
+    <div class="topbar-spacer"></div>
+    <div class="session-meta">
+      <div id="session-status"></div>
+      <div class="id" id="session-ref">—</div>
     </div>
   </div>
-  <div class="session" id="session-ref">no session loaded</div>
-</header>
+</div>
+
+<section class="page-header">
+  <div class="eyebrow">Convening session</div>
+  <h1>The Council deliberates on <span class="accent" id="patient-display">a multi-morbid patient</span>.</h1>
+  <p class="subtitle">
+    Eight specialty agents review the chart through their own clinical lens, exchange peer A2A messages,
+    surface conflicts, and synthesize a single concordant plan. This page renders the deliberation as it happens.
+  </p>
+</section>
 
 <main>
-  <section class="panel">
-    <h2>Specialty agents</h2>
-    <div class="specialty-grid" id="specialty-grid"></div>
-    <div class="audit-summary">
-      <div class="stat"><strong id="stat-views">0</strong>views</div>
-      <div class="stat"><strong id="stat-tools">0</strong>tool calls</div>
-      <div class="stat"><strong id="stat-fhir">0</strong>FHIR refs</div>
-      <div class="stat"><strong id="stat-events">0</strong>audit events</div>
+  <aside>
+    <div class="card">
+      <div class="label">Specialty agents</div>
+      <div class="roster" id="roster"></div>
+      <div class="stats">
+        <div class="stat"><div class="v" id="stat-views">0</div><div class="k">Specialty views</div></div>
+        <div class="stat"><div class="v" id="stat-tools">0</div><div class="k">Tool calls</div></div>
+        <div class="stat"><div class="v" id="stat-fhir">0</div><div class="k">FHIR refs</div></div>
+        <div class="stat"><div class="v" id="stat-events">0</div><div class="k">Audit events</div></div>
+      </div>
     </div>
-  </section>
 
-  <section class="panel">
-    <h2>Audit timeline</h2>
-    <div class="timeline" id="timeline">
-      <div class="empty" id="timeline-empty">Waiting for the convening to start…</div>
+    <div class="card timeline-card" style="margin-top: 20px;">
+      <div class="label">Audit timeline</div>
+      <div class="timeline" id="timeline">
+        <div class="empty-state" id="timeline-empty" style="padding: 0 24px;">Waiting for the convening to start…</div>
+      </div>
+    </div>
+  </aside>
+
+  <section>
+    <div id="plan-doc" class="plan-doc">
+      <div class="doc-meta">
+        <div><strong id="doc-specialty-count">—</strong> specialties consulted</div>
+        <div><strong id="doc-action-count">—</strong> action items</div>
+        <div><strong id="doc-conflict-count">—</strong> conflicts</div>
+        <div><strong id="doc-dissent-count">—</strong> preserved dissents</div>
+      </div>
+
+      <div class="doc-section">
+        <div class="section-eyebrow">Concordant Plan</div>
+        <h2>Brief</h2>
+        <div class="summary-block">
+          <p id="brief-summary"></p>
+          <p class="rationale" id="brief-rationale"></p>
+        </div>
+      </div>
+
+      <div class="doc-section">
+        <div class="section-eyebrow">Plan</div>
+        <h2>Continue · Start · Stop · Monitor</h2>
+        <div class="plan-grid">
+          <div class="plan-quadrant continue"><h3>Continue</h3><ul id="q-continue"></ul></div>
+          <div class="plan-quadrant start"><h3>Start</h3><ul id="q-start"></ul></div>
+          <div class="plan-quadrant stop"><h3>Stop</h3><ul id="q-stop"></ul></div>
+          <div class="plan-quadrant monitor"><h3>Monitor</h3><ul id="q-monitor"></ul></div>
+        </div>
+        <div id="timing-notes"></div>
+      </div>
+
+      <div class="doc-section">
+        <div class="section-eyebrow">Action plan</div>
+        <h2>Tasks for the primary clinician</h2>
+        <div id="actions"></div>
+      </div>
+
+      <div class="doc-section" id="conflicts-section" style="display:none;">
+        <div class="section-eyebrow">Conflict log</div>
+        <h2>How disagreements were resolved</h2>
+        <div id="conflicts"></div>
+      </div>
+
+      <div class="doc-section" id="dissents-section" style="display:none;">
+        <div class="section-eyebrow">Preserved dissents</div>
+        <h2>Where the Council did not converge</h2>
+        <div id="dissents"></div>
+      </div>
+    </div>
+
+    <div class="doc-section">
+      <div class="section-eyebrow">Specialty consult notes</div>
+      <h2>Per-specialty perspectives</h2>
+      <div class="views-stack" id="views"></div>
     </div>
   </section>
 </main>
 
-<section class="plan" id="plan-section">
-  <h2 style="margin-top:0;">🏛️ ConcordantPlan</h2>
-  <div class="plan-summary">
-    <p id="plan-summary"></p>
-    <p class="rationale" id="plan-rationale"></p>
+<footer>
+  <div class="footer-inner">
+    <div class="colophon">
+      <img src="logo.png" alt="" />
+      <span>Council Health · multi-specialty A2A deliberation network</span>
+    </div>
+    <div class="links">
+      <a href="https://github.com/council-health-ai/council" target="_blank" rel="noopener">Source</a>
+      <a href="https://sharponmcp.com" target="_blank" rel="noopener">SHARP-on-MCP</a>
+    </div>
   </div>
-
-  <h2>Plan</h2>
-  <div class="plan-grid">
-    <div class="plan-card continue"><h3>Continue</h3><ul id="plan-continue"></ul></div>
-    <div class="plan-card start"><h3>Start</h3><ul id="plan-start"></ul></div>
-    <div class="plan-card stop"><h3>Stop</h3><ul id="plan-stop"></ul></div>
-    <div class="plan-card monitor"><h3>Monitor</h3><ul id="plan-monitor"></ul></div>
-  </div>
-
-  <h2>Action items <span style="color:var(--muted);font-weight:400;font-size:12px;text-transform:none;letter-spacing:0;" id="action-count"></span></h2>
-  <div class="actions" id="actions"></div>
-
-  <h2 id="conflicts-heading" style="display:none;">Conflict log</h2>
-  <div class="conflicts" id="conflicts"></div>
-
-  <h2 id="dissents-heading" style="display:none;">Preserved dissents</h2>
-  <div class="dissents" id="dissents"></div>
-
-  <h2>Specialty views</h2>
-  <div class="specialty-views" id="specialty-views"></div>
-</section>
-
-<div class="footer">
-  Live data via Supabase Realtime · architecture <a href="https://github.com/council-health-ai/council">council-health-ai/council</a>
-</div>
+</footer>
 
 <script type="module">
   import { createClient } from "https://esm.sh/@supabase/supabase-js@2.45.4";
@@ -205,60 +761,75 @@
   const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBqZHVxYWJ3cm5ubGRyZmttcWRuIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczMDc0NTksImV4cCI6MjA5Mjg4MzQ1OX0.RqucDw4iPfuWkRudeqyb-a4qRLou1-DfhX7JntZ1dlY";
 
   const SPECIALTIES = [
-    "convener", "cardiology", "oncology", "nephrology", "endocrinology",
+    "cardiology", "oncology", "nephrology", "endocrinology",
     "obstetrics", "developmental_pediatrics", "psychiatry", "anesthesia",
   ];
 
-  const HUMAN_NAME = {
+  const HUMAN = {
     convener: "Convener",
     cardiology: "Cardiology",
     oncology: "Oncology",
     nephrology: "Nephrology",
     endocrinology: "Endocrinology",
-    obstetrics: "Obstetrics",
+    obstetrics: "Obstetrics & MFM",
     developmental_pediatrics: "Developmental Pediatrics",
     psychiatry: "Psychiatry",
-    anesthesia: "Anesthesia",
+    anesthesia: "Anesthesia & Perioperative",
+  };
+  const ROLE_BLURB = {
+    cardiology: "Cardiac safety · anticoagulation · QT risk",
+    oncology: "Cancer treatment · adjuvant therapy · DDIs",
+    nephrology: "Renal dosing · CKD progression · electrolytes",
+    endocrinology: "Glycemic targets · thyroid/adrenal · SGLT2/GLP-1",
+    obstetrics: "Pregnancy safety · MFM · VTE prophylaxis",
+    developmental_pediatrics: "Pediatric protocols · syndromic comorbidity",
+    psychiatry: "Psychotropic interactions · anticholinergic burden",
+    anesthesia: "ASA/RCRI risk · perioperative anticoagulation",
   };
 
   const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-  // Session selection: ?id=<uuid> OR /c/<uuid> OR latest
   function getSessionId() {
     const url = new URL(window.location.href);
     const q = url.searchParams.get("id");
     if (q) return q;
-    const path = url.pathname.match(/\/c\/([0-9a-f-]+)/i);
-    if (path) return path[1];
-    return null;
+    const m = url.pathname.match(/\/c\/([0-9a-f-]+)/i);
+    return m ? m[1] : null;
   }
 
-  // ── State
   const state = {
     sessionId: null,
-    specialties: {},   // specialty -> { status, latency_ms }
+    specialties: {},
     events: [],
     views: [],
     plan: null,
     fhirRefs: new Set(),
     toolCount: 0,
+    sessionStatus: null,
   };
 
-  // ── Render helpers
-  function renderSpecialtyGrid() {
-    const grid = document.getElementById("specialty-grid");
-    grid.innerHTML = "";
+  function escapeHtml(s) {
+    return String(s ?? "").replace(/[&<>"']/g, c => (
+      {"&": "&amp;","<": "&lt;",">": "&gt;",'"': "&quot;","'": "&#39;"}[c]
+    ));
+  }
+  function timeFmt(ts) {
+    return new Date(ts).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: false });
+  }
+
+  function renderRoster() {
+    const root = document.getElementById("roster");
+    root.innerHTML = "";
     for (const spec of SPECIALTIES) {
-      if (spec === "convener") continue;
       const meta = state.specialties[spec] || { status: "idle" };
       const row = document.createElement("div");
-      row.className = `specialty-row ${meta.status}`;
+      row.className = `roster-row ${meta.status}`;
       row.innerHTML = `
-        <span class="dot"></span>
-        <span class="name">${HUMAN_NAME[spec]}</span>
+        <span class="indicator"></span>
+        <span class="name">${HUMAN[spec]}</span>
         <span class="latency">${meta.latency_ms ? meta.latency_ms + "ms" : ""}</span>
       `;
-      grid.appendChild(row);
+      root.appendChild(row);
     }
   }
 
@@ -269,29 +840,26 @@
     document.getElementById("stat-events").textContent = state.events.length;
   }
 
-  function timeFmt(ts) {
-    return new Date(ts).toLocaleTimeString("en-US", { hour12: false, hour: "2-digit", minute: "2-digit", second: "2-digit" });
-  }
-
   function eventDescription(e) {
     const a = e.action;
-    if (a === "session_started") return "Convening session opened";
-    if (a === "tool_called") return `Called ${e.payload?.tool ?? "tool"}`;
+    const actor = (e.actor || "").replace(/^agent\//, "").replace(/^lens-mcp\//, "lens/");
+    const human = HUMAN[actor.replace("lens/", "")] || actor;
+    if (a === "session_started") return { actor: "Convener", text: "Convening session opened", flag: true };
+    if (a === "tool_called") {
+      const tool = e.payload?.tool ?? "tool";
+      return { actor: human, text: `Calls <span style="font-family:var(--mono);font-size:12px;color:var(--ink-3);">${escapeHtml(tool)}</span>` };
+    }
     if (a === "tool_returned") {
       const concerns = e.payload?.primary_concerns?.length ?? 0;
       const flags = e.payload?.red_flags?.length ?? 0;
-      return `Tool returned · ${concerns} concerns, ${flags} red flags`;
+      return { actor: human, text: `Returns ${concerns} concerns, ${flags} red flag${flags === 1 ? "" : "s"}` };
     }
-    if (a === "plan_synthesized") return `🎯 ConcordantPlan synthesized · ${e.payload?.n_actions ?? 0} actions`;
-    if (a === "session_ended") return "Session ended";
-    if (a === "conflict_flagged") return `⚠ Conflict flagged: ${e.payload?.topic ?? ""}`;
-    if (a === "guideline_referenced") return `📖 Guideline: ${e.payload?.guideline ?? ""}`;
-    return a;
-  }
-
-  function actorLabel(actor) {
-    if (!actor) return "?";
-    return actor.replace(/^agent\//, "").replace(/^lens-mcp\//, "lens/");
+    if (a === "plan_synthesized") {
+      const n = e.payload?.n_actions ?? 0;
+      return { actor: "Convener", text: `Concordant plan synthesized · ${n} action items`, flag: true };
+    }
+    if (a === "session_ended") return { actor: "Convener", text: "Session ended" };
+    return { actor: human, text: a };
   }
 
   function renderTimeline() {
@@ -299,12 +867,12 @@
     document.getElementById("timeline-empty")?.remove();
     tl.innerHTML = "";
     for (const e of state.events) {
+      const desc = eventDescription(e);
       const div = document.createElement("div");
-      div.className = `event ${e.action}`;
+      div.className = "event" + (desc.flag ? " flag" : "");
       div.innerHTML = `
-        <span class="time">${timeFmt(e.created_at)}</span>
-        <span class="actor">${actorLabel(e.actor)}</span>
-        <span class="what">${eventDescription(e)}</span>
+        <span class="when">${timeFmt(e.created_at)}</span>
+        <span class="body"><span class="actor">${desc.actor}</span> · ${desc.text}</span>
       `;
       tl.appendChild(div);
     }
@@ -314,155 +882,151 @@
   function renderPlan() {
     if (!state.plan) return;
     const p = state.plan;
-    const planSection = document.getElementById("plan-section");
-    planSection.classList.add("visible");
+    document.getElementById("plan-doc").classList.add("visible");
 
-    document.getElementById("plan-summary").textContent = p.brief?.summary ?? "";
-    document.getElementById("plan-rationale").textContent = p.brief?.rationale ?? "";
+    // Header counts
+    document.getElementById("doc-specialty-count").textContent = (p.specialties_consulted || []).length;
+    document.getElementById("doc-action-count").textContent = (p.action_items || []).length;
+    document.getElementById("doc-conflict-count").textContent = (p.conflict_log || []).length;
+    document.getElementById("doc-dissent-count").textContent = (p.dissents || []).length;
+
+    document.getElementById("brief-summary").textContent = p.brief?.summary ?? "";
+    document.getElementById("brief-rationale").textContent = p.brief?.rationale ?? "";
 
     for (const k of ["continue", "start", "stop", "monitor"]) {
-      const ul = document.getElementById(`plan-${k}`);
-      ul.innerHTML = "";
-      for (const item of p.brief?.plan?.[k] ?? []) {
-        const li = document.createElement("li");
-        li.textContent = item;
-        ul.appendChild(li);
-      }
+      const ul = document.getElementById(`q-${k}`);
+      const items = p.brief?.plan?.[k] ?? [];
+      ul.innerHTML = items.length ? items.map(i => `<li>${escapeHtml(i)}</li>`).join("") : `<li style="color:var(--ink-3);font-style:italic;">no items</li>`;
+      ul.parentElement.classList.toggle("empty", items.length === 0);
     }
 
-    const actionsDiv = document.getElementById("actions");
-    actionsDiv.innerHTML = "";
-    document.getElementById("action-count").textContent = `(${(p.action_items ?? []).length})`;
-    for (const a of p.action_items ?? []) {
+    // Timing notes (footnote-ish)
+    const tn = p.brief?.timing_notes;
+    const tnEl = document.getElementById("timing-notes");
+    tnEl.innerHTML = "";
+    if (tn && tn.length) {
       const div = document.createElement("div");
-      div.className = "action-item";
+      div.style.cssText = "margin-top:18px;padding:14px 18px;background:var(--paper);border:1px solid var(--rule-2);border-radius:var(--radius);font-size:13px;color:var(--ink-2);";
+      div.innerHTML = `<strong style="font-family:var(--sans);font-size:11px;text-transform:uppercase;letter-spacing:0.14em;color:var(--ink-3);font-weight:600;display:block;margin-bottom:6px;">Timing notes</strong><ul style="margin:0;padding-left:18px;">${tn.map(n => `<li style="margin:4px 0;">${escapeHtml(n)}</li>`).join("")}</ul>`;
+      tnEl.appendChild(div);
+    }
+
+    // Action items
+    const actionsRoot = document.getElementById("actions");
+    actionsRoot.innerHTML = "";
+    for (const a of p.action_items || []) {
+      const div = document.createElement("div");
+      div.className = "action";
       div.innerHTML = `
-        <div>${escapeHtml(a.description ?? "")}</div>
-        <div class="meta">
-          <span class="priority ${a.priority ?? "routine"}">${a.priority ?? "routine"}</span>
-          <span>Owner: <strong>${escapeHtml(a.owner ?? "")}</strong></span>
-          <span>Due: ${escapeHtml(a.due_within ?? "")}</span>
+        <div>
+          <div class="desc">${escapeHtml(a.description ?? "")}</div>
+          <div class="meta">
+            <span>Owner: <strong>${escapeHtml(a.owner ?? "primary care")}</strong></span>
+            <span>·</span>
+            <span>Due: <strong>${escapeHtml(a.due_within ?? "—")}</strong></span>
+          </div>
         </div>
+        <span class="priority ${a.priority || "routine"}">${a.priority || "routine"}</span>
       `;
-      actionsDiv.appendChild(div);
+      actionsRoot.appendChild(div);
     }
 
-    if ((p.conflict_log ?? []).length > 0) {
-      document.getElementById("conflicts-heading").style.display = "block";
-      const conflictsDiv = document.getElementById("conflicts");
-      conflictsDiv.innerHTML = "";
-      for (const c of p.conflict_log) {
-        const div = document.createElement("div");
-        div.className = "conflict-item";
-        div.innerHTML = `
-          <div class="topic">${escapeHtml(c.topic ?? "")} <span class="method ${c.method ?? ""}">${escapeHtml(c.method ?? "")}</span></div>
-          <ul class="positions">${(c.initial_positions ?? []).map(pos =>
-            `<li><strong>${escapeHtml(pos.specialty ?? "")}:</strong> ${escapeHtml(pos.position ?? "")}</li>`
-          ).join("")}</ul>
-          <div class="resolution"><strong>Resolution:</strong> ${escapeHtml(c.resolution ?? "")}</div>
-        `;
-        conflictsDiv.appendChild(div);
-      }
-    }
-
-    if ((p.dissents ?? []).length > 0) {
-      document.getElementById("dissents-heading").style.display = "block";
-      const dissentsDiv = document.getElementById("dissents");
-      dissentsDiv.innerHTML = "";
-      for (const d of p.dissents) {
-        const div = document.createElement("div");
-        div.className = "dissent-item";
-        div.innerHTML = `
-          <div class="specialty">${HUMAN_NAME[d.specialty] ?? d.specialty}</div>
-          <div class="position">${escapeHtml(d.position ?? "")}</div>
-          <div class="rationale">${escapeHtml(d.rationale ?? "")}</div>
-        `;
-        dissentsDiv.appendChild(div);
-      }
-    }
-
-    const viewsDiv = document.getElementById("specialty-views");
-    viewsDiv.innerHTML = "";
-    for (const v of state.views) {
+    // Conflicts
+    const conflicts = p.conflict_log || [];
+    document.getElementById("conflicts-section").style.display = conflicts.length ? "block" : "none";
+    const cRoot = document.getElementById("conflicts");
+    cRoot.innerHTML = "";
+    for (const c of conflicts) {
       const div = document.createElement("div");
-      div.className = "view-card";
-      const concerns = (v.primary_concerns || []).map(c => `<li>${escapeHtml(c)}</li>`).join("");
-      const flags = (v.red_flags || []).map(c => `<li>${escapeHtml(c)}</li>`).join("");
+      div.className = "conflict";
+      const positions = (c.initial_positions || []).map(pos =>
+        `<li><strong>${escapeHtml(HUMAN[pos.specialty] ?? pos.specialty)}:</strong> ${escapeHtml(pos.position ?? "")}</li>`
+      ).join("");
       div.innerHTML = `
-        <div class="specialty-name">${HUMAN_NAME[v.specialty] ?? v.specialty}</div>
-        <div class="summary">${escapeHtml(v.patient_summary_excerpt ?? "")}</div>
-        ${concerns ? `<details open><summary>Primary concerns</summary><ul class="concerns">${concerns}</ul></details>` : ""}
-        ${flags ? `<details><summary>Red flags</summary><ul class="red-flags">${flags}</ul></details>` : ""}
+        <div class="topic">${escapeHtml(c.topic ?? "")} <span class="method-pill ${c.method ?? ""}">${escapeHtml(c.method ?? "")}</span></div>
+        ${positions ? `<ul class="positions">${positions}</ul>` : ""}
+        <div class="resolution"><strong>Resolution.</strong> ${escapeHtml(c.resolution ?? "")}</div>
       `;
-      viewsDiv.appendChild(div);
+      cRoot.appendChild(div);
+    }
+
+    // Dissents
+    const dissents = p.dissents || [];
+    document.getElementById("dissents-section").style.display = dissents.length ? "block" : "none";
+    const dRoot = document.getElementById("dissents");
+    dRoot.innerHTML = "";
+    for (const d of dissents) {
+      const div = document.createElement("div");
+      div.className = "dissent";
+      div.innerHTML = `
+        <div class="who">${escapeHtml(HUMAN[d.specialty] ?? d.specialty)}</div>
+        <div class="position">"${escapeHtml(d.position ?? "")}"</div>
+        <div class="rationale">${escapeHtml(d.rationale ?? "")}</div>
+      `;
+      dRoot.appendChild(div);
+    }
+
+    // Patient summary heading from brief
+    if (p.patient_id) {
+      const display = p.brief?.summary ? p.brief.summary.split(".")[0] + "." : `patient ${p.patient_id.slice(0, 8)}…`;
+      document.getElementById("patient-display").textContent = display.length > 90 ? display.slice(0, 87) + "…" : display;
     }
   }
 
-  function escapeHtml(s) {
-    return String(s ?? "").replace(/[&<>"']/g, c => ({
-      "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
-    }[c]));
-  }
-
-  // ── Data fetch
-  async function loadInitial() {
-    state.sessionId = getSessionId();
-    if (!state.sessionId) {
-      // Show the most recent session
-      const { data } = await supabase
-        .from("convening_sessions")
-        .select("id")
-        .order("started_at", { ascending: false })
-        .limit(1);
-      if (data?.length) state.sessionId = data[0].id;
-    }
-    if (!state.sessionId) {
-      document.getElementById("session-ref").textContent = "no session";
+  function renderViews() {
+    const root = document.getElementById("views");
+    root.innerHTML = "";
+    if (state.views.length === 0) {
+      root.innerHTML = `<div class="empty-state">No specialty views recorded yet.</div>`;
       return;
     }
-    document.getElementById("session-ref").textContent = `session ${state.sessionId.slice(0, 8)}…`;
-
-    // Existing audit events
-    const { data: events } = await supabase
-      .from("audit_events")
-      .select("*")
-      .eq("convening_id", state.sessionId)
-      .order("created_at", { ascending: true });
-    if (events) {
-      state.events = events;
-      for (const e of events) handleEventEffects(e);
+    for (const v of state.views) {
+      const div = document.createElement("div");
+      div.className = "view";
+      const concerns = (v.primary_concerns || []).map(c => `<li>${escapeHtml(c)}</li>`).join("");
+      const flags = (v.red_flags || []).map(c => `<li>${escapeHtml(c)}</li>`).join("");
+      const guidelines = (v.applicable_guidelines || []).slice(0, 4).join(" · ");
+      const reasoning = (v.reasoning_trace || []).map(r => `<li>${escapeHtml(r)}</li>`).join("");
+      div.innerHTML = `
+        <div class="view-header">
+          <div class="specialty">${escapeHtml(HUMAN[v.specialty] ?? v.specialty)}</div>
+          <div class="role">${escapeHtml(ROLE_BLURB[v.specialty] ?? "")}</div>
+        </div>
+        ${v.patient_summary_excerpt ? `<div class="summary">${escapeHtml(v.patient_summary_excerpt)}</div>` : ""}
+        <div class="view-grid">
+          <div class="col">
+            <h4>Primary concerns</h4>
+            ${concerns ? `<ul>${concerns}</ul>` : `<div class="empty-state" style="padding:0;">none</div>`}
+          </div>
+          <div class="col flags">
+            <h4>Red flags</h4>
+            ${flags ? `<ul>${flags}</ul>` : `<div class="empty-state" style="padding:0;">none</div>`}
+          </div>
+        </div>
+        ${guidelines ? `<div class="view-guideline-row"><strong>Applicable guidelines:</strong> ${escapeHtml(guidelines)}</div>` : ""}
+        ${reasoning ? `<details><summary>Reasoning trace · ${(v.reasoning_trace || []).length} steps</summary><div class="reasoning"><ol>${reasoning}</ol></div></details>` : ""}
+      `;
+      root.appendChild(div);
     }
-
-    // Existing agent messages (Round 1 SpecialtyViews)
-    const { data: msgs } = await supabase
-      .from("agent_messages")
-      .select("*")
-      .eq("convening_id", state.sessionId)
-      .order("created_at", { ascending: true });
-    if (msgs) {
-      for (const m of msgs) handleMessage(m);
-    }
-
-    // Plan if completed
-    const { data: session } = await supabase
-      .from("convening_sessions")
-      .select("plan_artifact, status")
-      .eq("id", state.sessionId)
-      .single();
-    if (session?.plan_artifact) {
-      state.plan = session.plan_artifact;
-      renderPlan();
-    }
-
-    renderSpecialtyGrid();
-    renderTimeline();
-    renderStats();
   }
 
-  function handleEventEffects(e) {
+  function renderSessionMeta() {
+    const refEl = document.getElementById("session-ref");
+    const statusEl = document.getElementById("session-status");
+    if (!state.sessionId) {
+      refEl.textContent = "—";
+      statusEl.innerHTML = `<span class="status-pill"><span class="dot"></span>Idle</span>`;
+      return;
+    }
+    refEl.textContent = state.sessionId.slice(0, 8) + "…";
+    const status = state.sessionStatus || "active";
+    statusEl.innerHTML = `<span class="status-pill ${status}"><span class="dot"></span>${status}</span>`;
+  }
+
+  function handleEvent(e) {
     if (e.fhir_refs) for (const r of e.fhir_refs) state.fhirRefs.add(r);
     if (e.action === "tool_called") state.toolCount += 1;
-    // Mark specialty as thinking when its agent is called, done when returned
+
     const actor = e.actor || "";
     const m = actor.match(/^(?:agent|lens-mcp)\/(\w+)/);
     if (m && m[1] !== "convener") {
@@ -478,57 +1042,86 @@
   function handleMessage(m) {
     if (m.role === "convener") return;
     if (m.direction !== "inbound") return;
-    if (!state.views.find(v => v.specialty === m.role)) {
-      state.views.push({ specialty: m.role, ...m.content });
-      state.specialties[m.role] = { status: "done" };
-    }
+    if (state.views.find(v => v.specialty === m.role)) return;
+    state.views.push({ specialty: m.role, ...m.content });
+    state.specialties[m.role] = { status: "done" };
   }
 
-  // ── Realtime subscriptions
+  async function loadInitial() {
+    state.sessionId = getSessionId();
+    if (!state.sessionId) {
+      const { data } = await supabase
+        .from("convening_sessions")
+        .select("id, status")
+        .order("started_at", { ascending: false })
+        .limit(1);
+      if (data?.length) {
+        state.sessionId = data[0].id;
+        state.sessionStatus = data[0].status;
+      }
+    }
+    renderSessionMeta();
+    if (!state.sessionId) {
+      document.getElementById("timeline-empty").textContent = "No convening sessions yet.";
+      return;
+    }
+
+    const { data: events } = await supabase
+      .from("audit_events")
+      .select("*")
+      .eq("convening_id", state.sessionId)
+      .order("created_at", { ascending: true });
+    if (events) {
+      state.events = events;
+      events.forEach(handleEvent);
+    }
+
+    const { data: msgs } = await supabase
+      .from("agent_messages")
+      .select("*")
+      .eq("convening_id", state.sessionId)
+      .order("created_at", { ascending: true });
+    if (msgs) msgs.forEach(handleMessage);
+
+    const { data: session } = await supabase
+      .from("convening_sessions")
+      .select("plan_artifact, status, patient_id")
+      .eq("id", state.sessionId)
+      .single();
+    if (session) {
+      state.sessionStatus = session.status;
+      if (session.plan_artifact) state.plan = session.plan_artifact;
+    }
+
+    renderRoster();
+    renderTimeline();
+    renderStats();
+    renderPlan();
+    renderViews();
+    renderSessionMeta();
+  }
+
   function subscribeRealtime() {
     if (!state.sessionId) return;
-
     supabase.channel(`audit-${state.sessionId}`)
-      .on("postgres_changes",
-        { event: "INSERT", schema: "public", table: "audit_events", filter: `convening_id=eq.${state.sessionId}` },
-        (payload) => {
-          const e = payload.new;
-          state.events.push(e);
-          handleEventEffects(e);
-          renderSpecialtyGrid();
-          renderTimeline();
-          renderStats();
-        })
-      .subscribe();
-
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "audit_events", filter: `convening_id=eq.${state.sessionId}` }, p => {
+        const e = p.new; state.events.push(e); handleEvent(e);
+        renderRoster(); renderTimeline(); renderStats();
+      }).subscribe();
     supabase.channel(`msg-${state.sessionId}`)
-      .on("postgres_changes",
-        { event: "INSERT", schema: "public", table: "agent_messages", filter: `convening_id=eq.${state.sessionId}` },
-        (payload) => {
-          handleMessage(payload.new);
-          renderSpecialtyGrid();
-          renderStats();
-          renderPlan(); // update views section if plan already shown
-        })
-      .subscribe();
-
+      .on("postgres_changes", { event: "INSERT", schema: "public", table: "agent_messages", filter: `convening_id=eq.${state.sessionId}` }, p => {
+        handleMessage(p.new); renderRoster(); renderStats(); renderViews();
+      }).subscribe();
     supabase.channel(`session-${state.sessionId}`)
-      .on("postgres_changes",
-        { event: "UPDATE", schema: "public", table: "convening_sessions", filter: `id=eq.${state.sessionId}` },
-        (payload) => {
-          if (payload.new.plan_artifact) {
-            state.plan = payload.new.plan_artifact;
-            renderPlan();
-          }
-        })
-      .subscribe();
+      .on("postgres_changes", { event: "UPDATE", schema: "public", table: "convening_sessions", filter: `id=eq.${state.sessionId}` }, p => {
+        state.sessionStatus = p.new.status;
+        if (p.new.plan_artifact) { state.plan = p.new.plan_artifact; renderPlan(); }
+        renderSessionMeta();
+      }).subscribe();
   }
 
-  // ── Boot
   await loadInitial();
   subscribeRealtime();
-  // Final stats refresh after subscribe
-  renderStats();
 </script>
 </body>
 </html>
