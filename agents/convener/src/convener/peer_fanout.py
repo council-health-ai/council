@@ -323,12 +323,21 @@ async def fan_out(
     fhir_metadata: dict[str, Any] | None,
     api_key: str | None = None,
     timeout_seconds: float = 90.0,
+    max_concurrency: int = 3,
 ) -> list[PeerResult]:
     """Send the same/different prompt to multiple peers in parallel. Each peer's url is hit
-    via its A2A AgentCard. Returns one PeerResult per call (success or error)."""
+    via its A2A AgentCard. Returns one PeerResult per call (success or error).
+
+    `max_concurrency` caps how many specialty agents are called simultaneously. We
+    keep this conservative (3) because every peer call wakes a separate Vertex
+    Gemini conversation, and Vertex's per-project per-minute rate limit is
+    triggered when we burst all 8 at once (live-observed 429 RESOURCE_EXHAUSTED).
+    Semaphore-bounded fan-out trades a few seconds of wallclock for reliability.
+    """
     api_key = api_key or settings.peer_api_key
     headers = {"X-API-Key": api_key} if api_key else {}
 
+    sem = asyncio.Semaphore(max_concurrency)
     timeout = httpx.Timeout(timeout_seconds, connect=15.0)
     async with httpx.AsyncClient(timeout=timeout, headers=headers) as httpx_client:
         config = ClientConfig(
@@ -338,16 +347,17 @@ async def fan_out(
         factory = ClientFactory(config)
 
         async def run_one(call: PeerCall) -> PeerResult:
-            return await _call_one_peer(
-                httpx_client=httpx_client,
-                factory=factory,
-                specialty=call.specialty,
-                url=call.url,
-                prompt=call.prompt,
-                context_id=context_id,
-                fhir_metadata=fhir_metadata,
-                api_key=api_key or "",
-            )
+            async with sem:
+                return await _call_one_peer(
+                    httpx_client=httpx_client,
+                    factory=factory,
+                    specialty=call.specialty,
+                    url=call.url,
+                    prompt=call.prompt,
+                    context_id=context_id,
+                    fhir_metadata=fhir_metadata,
+                    api_key=api_key or "",
+                )
 
         results = await asyncio.gather(*(run_one(c) for c in calls), return_exceptions=False)
     return list(results)

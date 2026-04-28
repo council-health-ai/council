@@ -21,22 +21,31 @@ function readHeader(req: Request, name: string): string | undefined {
 }
 
 /**
- * Extract SHARP context from a request. Returns null if required headers are missing
- * — the middleware should already have rejected such requests with 403.
+ * Extract SHARP context from a request. Returns null only if the FHIR server URL
+ * is completely missing — that's the one piece of context we genuinely cannot
+ * proceed without (we wouldn't know where to send FHIR queries).
+ *
+ * The access token is allowed to be present-but-empty, matching the middleware's
+ * lenient stance: Prompt Opinion's regression (observed 2026-04-26+) ships an
+ * empty token in some workspace setups. When that happens we still attempt the
+ * FHIR call — the server's anonymous-access path may serve, or the host's own
+ * auth error surfaces with a more useful diagnostic than a 403 at our edge.
  *
  * patientId precedence: explicit X-Patient-ID header → JWT `patient` claim → null.
  */
 export function extractSharpContext(req: Request): SharpContext | null {
   const fhirServerUrl = readHeader(req, SHARP_HEADERS.FHIR_SERVER_URL);
   const fhirAccessToken = readHeader(req, SHARP_HEADERS.FHIR_ACCESS_TOKEN);
-  if (!fhirServerUrl || !fhirAccessToken) return null;
+  if (!fhirServerUrl) return null;
+  // Token may be present-but-empty (PO regression). Normalise to "" rather than reject.
+  const token = fhirAccessToken ?? "";
 
   const explicitPatientId = readHeader(req, SHARP_HEADERS.PATIENT_ID);
   let patientId = explicitPatientId ?? null;
 
-  if (!patientId) {
+  if (!patientId && token) {
     try {
-      const decoded = decodeJwt(fhirAccessToken) as Record<string, unknown>;
+      const decoded = decodeJwt(token) as Record<string, unknown>;
       const claim = decoded.patient ?? decoded["fhirUser"];
       if (typeof claim === "string") {
         patientId = claim.replace(/^Patient\//, "");
@@ -53,7 +62,7 @@ export function extractSharpContext(req: Request): SharpContext | null {
 
   return {
     fhirServerUrl,
-    fhirAccessToken,
+    fhirAccessToken: token,
     patientId,
     conveningId,
     specialty,
