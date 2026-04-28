@@ -331,6 +331,38 @@ async def convene_council(
 _BACKGROUND_TASKS: set[asyncio.Task[Any]] = set()
 
 
+# ── Aliases to absorb Gemini tool-name typos ────────────────────────────
+# Live-observed typos: 'conven_council', 'council_convene', 'consult_council'.
+# Each is registered as its own tool so ADK can dispatch to it; all just
+# delegate to convene_council.
+
+async def conven_council(  # noqa: D401  (intentional alias)
+    tool_context: ToolContext,
+    patient_id: str | None = None,
+    focus_problem: str | None = None,
+) -> dict[str, Any]:
+    """Alias for `convene_council` — the LLM occasionally produces this typo."""
+    return await convene_council(tool_context, patient_id, focus_problem)
+
+
+async def consult_council(
+    tool_context: ToolContext,
+    patient_id: str | None = None,
+    focus_problem: str | None = None,
+) -> dict[str, Any]:
+    """Alias for `convene_council` — accepts the noun-first phrasing."""
+    return await convene_council(tool_context, patient_id, focus_problem)
+
+
+async def council_consult(
+    tool_context: ToolContext,
+    patient_id: str | None = None,
+    focus_problem: str | None = None,
+) -> dict[str, Any]:
+    """Alias for `convene_council`."""
+    return await convene_council(tool_context, patient_id, focus_problem)
+
+
 SYSTEM_INSTRUCTION = """\
 You are the Convener of The Council — an A2A peer-agent network that deliberates over a multi-morbid patient with up to 8 specialty agents.
 
@@ -362,7 +394,7 @@ def build_agent() -> Agent:
         name="convener",
         model=settings.convener_model,
         instruction=SYSTEM_INSTRUCTION,
-        tools=[convene_council],
+        tools=[convene_council, conven_council, consult_council, council_consult],
         before_model_callback=extract_fhir_context,
     )
 
