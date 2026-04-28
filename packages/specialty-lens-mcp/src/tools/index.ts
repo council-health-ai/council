@@ -16,7 +16,13 @@ import type { ConflictMatrix, ConcordantPlan, Specialty, SpecialtyView } from ".
 
 const lensInputShape = {
   patient_id: z.string().min(1).describe("FHIR Patient.id to analyze"),
-  focus_problem: z.string().optional().describe("Optional clinical question to focus the analysis on"),
+  // .nullish() — accept undefined OR null. Python ADK serializes optional
+  // function args as JSON null, which zod's .optional() rejects ("expected
+  // string, received null"). Without nullish() obstetrics 32602'd reliably.
+  focus_problem: z
+    .string()
+    .nullish()
+    .describe("Optional clinical question to focus the analysis on"),
 };
 
 // SpecialtyView shape — for consumers passing views into concordance tools.
@@ -84,7 +90,7 @@ function registerLensTool(server: McpServer, req: Request, wiring: LensToolWirin
       description: wiring.description,
       inputSchema: lensInputShape,
     },
-    async (input: { patient_id: string; focus_problem?: string }) => {
+    async (input: { patient_id: string; focus_problem?: string | null }) => {
       const ctx = extractSharpContext(req);
       if (!ctx) {
         return failure("fhir_context_required");
@@ -93,19 +99,20 @@ function registerLensTool(server: McpServer, req: Request, wiring: LensToolWirin
       const start = Date.now();
       const conveningId = ctx.conveningId ?? null;
       const specialty: Specialty = wiring.spec.specialty;
+      const focusProblem = input.focus_problem ?? undefined;
 
       await recordAuditEvent({
         conveningId,
         actor: `lens-mcp/${specialty}`,
         action: "tool_called",
-        payload: { tool: wiring.toolName, patient_id: input.patient_id, focus: input.focus_problem ?? null },
+        payload: { tool: wiring.toolName, patient_id: input.patient_id, focus: focusProblem ?? null },
       });
 
       try {
         const { view, latencyMs } = await runLens(wiring.spec, {
           ctx,
           patientId: input.patient_id,
-          focusProblem: input.focus_problem,
+          focusProblem,
         });
 
         await Promise.all([
