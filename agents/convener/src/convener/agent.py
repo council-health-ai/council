@@ -89,8 +89,11 @@ async def convene_council(
     if not patient_id:
         return {"error": "No patient_id provided and none in FHIR context. The Council requires an active patient context."}
 
-    if not fhir_url or not fhir_token:
-        return {"error": "FHIR context not present in tool_context.state"}
+    # Only fhir_url is mandatory. fhir_token may be empty (Prompt Opinion empty-token
+    # regression observed 2026-04-26+). Downstream FHIR calls will surface their own
+    # auth error if the workspace FHIR endpoint requires a token.
+    if not fhir_url:
+        return {"error": "FHIR URL not present in tool_context.state"}
 
     overall_started = time.monotonic()
 

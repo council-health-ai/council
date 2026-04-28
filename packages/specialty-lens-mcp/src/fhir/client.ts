@@ -14,15 +14,19 @@ import type {
   Procedure,
 } from "./types.js";
 
-/** Build an axios instance configured for SMART-on-FHIR bearer-token forwarding. */
+/** Build an axios instance configured for SMART-on-FHIR bearer-token forwarding.
+ *  When the access token is empty (Prompt Opinion regression as of 2026-04-26),
+ *  we omit the Authorization header so the workspace's anonymous-access path
+ *  has a chance to serve. The host's actual error surfaces if it requires auth. */
 function makeClient(ctx: SharpContext): AxiosInstance {
+  const headers: Record<string, string> = { Accept: "application/fhir+json" };
+  if (ctx.fhirAccessToken && ctx.fhirAccessToken.trim().length > 0) {
+    headers.Authorization = `Bearer ${ctx.fhirAccessToken}`;
+  }
   return axios.create({
     baseURL: ctx.fhirServerUrl.replace(/\/$/, ""),
     timeout: 15000,
-    headers: {
-      Accept: "application/fhir+json",
-      Authorization: `Bearer ${ctx.fhirAccessToken}`,
-    },
+    headers,
     validateStatus: (s) => s >= 200 && s < 500,
   });
 }

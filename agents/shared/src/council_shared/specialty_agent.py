@@ -55,8 +55,10 @@ def build_specialty_agent(specialty: Specialty, focus_blurb: str) -> Agent:
         convening_id = state.get("convening_id")
         round_id = state.get("round_id")
 
-        if not fhir_url or not fhir_token:
-            return {"error": f"FHIR context not present in tool_context.state for {specialty}"}
+        # Only fhir_url is mandatory. fhir_token may be empty (PO empty-token regression);
+        # downstream FHIR call surfaces the host-level error if the endpoint requires auth.
+        if not fhir_url:
+            return {"error": f"FHIR URL not present in tool_context.state for {specialty}"}
 
         started = time.monotonic()
         await record_audit_event(
