@@ -1,4 +1,4 @@
-import { callGemini, Type } from "../llm/gemini.js";
+import { callGemini, regionForSpecialty, Type } from "../llm/gemini.js";
 import { fetchPatientChart, summarizeChart, chartFhirRefs } from "../fhir/client.js";
 import type { SharpContext } from "../sharp/context.js";
 import type { SpecialtyView, Specialty } from "./types.js";
@@ -81,6 +81,10 @@ export async function runLens(spec: LensSpec, args: RunLensArgs): Promise<{ view
     systemInstruction: spec.systemPrompt + "\n" + COMMON_DIRECTIVES,
     userPrompt,
     responseSchema: specialtyViewSchema,
+    // Each specialty lens picks its own Vertex region — independent quota
+    // pool per call so 8 simultaneous lens calls don't fight over one
+    // region's RPM ceiling.
+    region: regionForSpecialty(spec.specialty),
   });
 
   const view: SpecialtyView = {

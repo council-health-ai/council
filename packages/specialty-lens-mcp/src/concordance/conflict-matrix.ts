@@ -1,4 +1,4 @@
-import { callGemini, Type } from "../llm/gemini.js";
+import { callGemini, regionForSpecialty, Type } from "../llm/gemini.js";
 import { logger } from "../observability/logger.js";
 import type { ConflictMatrix, SpecialtyView } from "../lenses/types.js";
 
@@ -108,6 +108,7 @@ export async function buildConflictMatrix(views: SpecialtyView[]): Promise<Confl
     userPrompt,
     responseSchema: conflictMatrixSchema,
     temperature: 0.2,
+    region: regionForSpecialty("concordance"),
   });
 
   const matrix: ConflictMatrix = {

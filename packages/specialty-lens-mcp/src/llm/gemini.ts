@@ -3,43 +3,76 @@ import { GoogleGenAI, Type } from "@google/genai";
 import { config } from "../config.js";
 import { logger } from "../observability/logger.js";
 
-let client: GoogleGenAI | null = null;
+/**
+ * Per-region Vertex client cache. Each lens specialty is routed to its own
+ * Vertex region so the 8 lens calls don't fight over a single region's
+ * Gemini RPM quota — same project, same trial billing, ~8× the burst headroom.
+ *
+ * AI Studio fallback (single client) when Vertex isn't configured.
+ */
+const clientByRegion = new Map<string, GoogleGenAI>();
+let aiStudioClient: GoogleGenAI | null = null;
+
+const REGION_BY_SPECIALTY: Record<string, string> = {
+  cardiology:               "us-west1",
+  oncology:                 "us-east4",
+  nephrology:               "us-south1",
+  endocrinology:            "europe-west1",
+  obstetrics:               "europe-west4",
+  developmental_pediatrics: "us-east5",      // asia-east1 had model availability issue
+  psychiatry:               "asia-northeast1",
+  anesthesia:               "asia-southeast1",
+  // Concordance synthesis (Convener-side, not specialty-bound)
+  concordance:              "us-central1",
+};
+
+let saMaterialized = false;
+function materializeSAKey(): boolean {
+  if (saMaterialized) return process.env.GOOGLE_APPLICATION_CREDENTIALS != null;
+  const saJson = process.env.GCP_SA_KEY_JSON?.trim();
+  if (!saJson) return false;
+  const credPath = "/tmp/gcp-sa.json";
+  try {
+    writeFileSync(credPath, saJson, { mode: 0o600 });
+    process.env.GOOGLE_APPLICATION_CREDENTIALS = credPath;
+    saMaterialized = true;
+    return true;
+  } catch (err) {
+    logger.error({ err }, "failed to materialize GCP SA key");
+    return false;
+  }
+}
 
 /**
- * Create the Gemini client. Prefer Vertex when the GCP service account is
- * available so calls draw from the project's $300 GCP trial billing rather
- * than the depleted AI-Studio prepayment pool. Falls back to AI Studio (API
- * key) only when Vertex isn't configured — useful for local dev without GCP.
+ * Create or reuse a Vertex client for the given region. Falls back to AI
+ * Studio if Vertex isn't configured.
  */
-function getClient(): GoogleGenAI {
-  if (client) return client;
-
+function getClient(region?: string): GoogleGenAI {
   const useVertex = (process.env.GOOGLE_GENAI_USE_VERTEXAI ?? "").toLowerCase() === "true";
   const project = process.env.GOOGLE_CLOUD_PROJECT;
-  const location = process.env.GOOGLE_CLOUD_LOCATION ?? "us-central1";
-  const saJson = process.env.GCP_SA_KEY_JSON?.trim();
 
-  if (useVertex && project && saJson) {
-    // The Node Google Auth library reads GOOGLE_APPLICATION_CREDENTIALS from a
-    // file path, not from an env-encoded JSON blob. HF Spaces only persists
-    // env vars, so we materialize the JSON to /tmp on first call.
-    const credPath = "/tmp/gcp-sa.json";
-    try {
-      writeFileSync(credPath, saJson, { mode: 0o600 });
-      process.env.GOOGLE_APPLICATION_CREDENTIALS = credPath;
-    } catch (err) {
-      logger.error({ err }, "failed to materialize GCP SA key; falling back to AI Studio");
-    }
-    if (process.env.GOOGLE_APPLICATION_CREDENTIALS === credPath) {
-      logger.info({ project, location }, "Gemini client: using Vertex AI");
-      client = new GoogleGenAI({ vertexai: true, project, location });
-      return client;
-    }
+  if (useVertex && project && materializeSAKey()) {
+    const loc = region ?? process.env.GOOGLE_CLOUD_LOCATION ?? "us-central1";
+    const cached = clientByRegion.get(loc);
+    if (cached) return cached;
+    logger.info({ project, location: loc }, "Gemini client: provisioning Vertex region");
+    const c = new GoogleGenAI({ vertexai: true, project, location: loc });
+    clientByRegion.set(loc, c);
+    return c;
   }
 
-  logger.warn("Gemini client: falling back to AI Studio (no Vertex SA configured)");
-  client = new GoogleGenAI({ apiKey: config.GEMINI_API_KEY });
-  return client;
+  if (!aiStudioClient) {
+    logger.warn("Gemini client: falling back to AI Studio (no Vertex SA configured)");
+    aiStudioClient = new GoogleGenAI({ apiKey: config.GEMINI_API_KEY });
+  }
+  return aiStudioClient;
+}
+
+/** Resolve the right region for a given specialty. Specialties without a
+ *  mapping (or `undefined`) get the default Vertex location. */
+export function regionForSpecialty(specialty?: string): string | undefined {
+  if (!specialty) return undefined;
+  return REGION_BY_SPECIALTY[specialty];
 }
 
 export interface GeminiCallArgs {
@@ -48,6 +81,9 @@ export interface GeminiCallArgs {
   responseSchema?: object;
   model?: string;
   temperature?: number;
+  /** Vertex region override — let lenses route to their own region for
+   *  independent quota. */
+  region?: string;
 }
 
 function isRateLimit(err: unknown): boolean {
@@ -69,7 +105,7 @@ async function sleep(ms: number): Promise<void> {
  *  parallel and then the concordance brief lands within the same window —
  *  retrying transparently keeps the deliberation alive. */
 export async function callGemini<T = unknown>(args: GeminiCallArgs): Promise<{ data: T; raw: string; latencyMs: number }> {
-  const ai = getClient();
+  const ai = getClient(args.region);
   const model = args.model ?? config.GEMINI_MODEL;
   const start = Date.now();
 

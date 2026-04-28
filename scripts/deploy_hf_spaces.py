@@ -230,7 +230,7 @@ REGION_BY_SERVICE: dict[str, str] = {
     "nephrology":           "us-south1",
     "endocrine":            "europe-west1",
     "obstetrics":           "europe-west4",
-    "pediatrics":           "asia-east1",
+    "pediatrics":           "us-east5",       # asia-east1 had a model-availability gap on this trial project
     "psychiatry":           "asia-northeast1",
     "anesthesia":           "asia-southeast1",
 }

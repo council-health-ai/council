@@ -1,4 +1,4 @@
-import { callGemini, Type } from "../llm/gemini.js";
+import { callGemini, regionForSpecialty, Type } from "../llm/gemini.js";
 import { logger } from "../observability/logger.js";
 import type { ConcordantPlan, ConflictMatrix, SpecialtyView } from "../lenses/types.js";
 
@@ -138,6 +138,9 @@ Now synthesize the ConcordantPlan as JSON.`;
     userPrompt,
     responseSchema: concordantPlanSchema,
     temperature: 0.2,
+    // Concordance synthesis runs on its own region so it doesn't compete
+    // with any of the 8 specialty lens regions for quota.
+    region: regionForSpecialty("concordance"),
   });
 
   const fhirRefsTouched = new Set<string>();
