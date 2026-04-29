@@ -451,12 +451,31 @@
   for (const t of document.querySelectorAll(".tab")) {
     t.addEventListener("click", () => activateTab(t.dataset.tab));
   }
-  if (window.location.hash) {
-    const target = window.location.hash.slice(1);
+
+  // Apply the initial hash on load
+  function applyHash() {
+    const target = (window.location.hash || "").slice(1);
     if (["plan", "deliberation", "consults", "audit"].includes(target)) {
       activateTab(target, false);
     }
   }
+  applyHash();
+
+  // Listen for hash changes from in-page anchor clicks (e.g. the empty-plan
+  // CTA "see Live Deliberation for in-flight progress")
+  window.addEventListener("hashchange", applyHash);
+
+  // Belt-and-suspenders: any internal anchor with href="#tab-name" should
+  // also activate the tab directly. Future-proofs against any link we add.
+  document.addEventListener("click", (e) => {
+    const link = e.target.closest('a[href^="#"]');
+    if (!link) return;
+    const target = link.getAttribute("href").slice(1);
+    if (["plan", "deliberation", "consults", "audit"].includes(target)) {
+      e.preventDefault();
+      activateTab(target);
+    }
+  });
 
   /* ── Renderers ──────────────────────────────────────────────────── */
   function renderRoster() {

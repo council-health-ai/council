@@ -5,7 +5,9 @@ const envSchema = z.object({
   NODE_ENV: z.enum(["development", "production", "test"]).default("development"),
   LOG_LEVEL: z.enum(["fatal", "error", "warn", "info", "debug", "trace"]).default("info"),
 
-  GEMINI_API_KEY: z.string().min(10, "GEMINI_API_KEY required"),
+  // Optional: only used when Vertex AI is NOT configured (local dev fallback).
+  // In production we use Vertex via GCP_SA_KEY_JSON + GOOGLE_GENAI_USE_VERTEXAI.
+  GEMINI_API_KEY: z.string().optional().default(""),
   GEMINI_MODEL: z.string().default("gemini-2.5-flash"),
 
   SUPABASE_URL: z.string().url().optional(),
