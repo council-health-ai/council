@@ -6,6 +6,11 @@
 
 FROM node:22-alpine
 
+# Pre-create + chown WORKDIR before USER drop so that npm install can write
+# its build artifacts. Cloud Build's WORKDIR-after-USER doesn't create the
+# directory with the user's ownership the way HF Spaces' Docker daemon does.
+RUN mkdir -p /home/node/app && chown -R node:node /home/node/app
+
 USER node
 ENV HOME=/home/node \
     NODE_ENV=production \

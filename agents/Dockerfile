@@ -8,7 +8,14 @@
 
 FROM python:3.12-slim
 
-RUN useradd -m -u 1000 user
+# Create user + WORKDIR explicitly with ownership BEFORE dropping privileges.
+# Cloud Build's WORKDIR-after-USER doesn't create the directory with the
+# user's ownership the way HF Spaces' Docker daemon does, which makes
+# `uv sync` fail with "Permission denied" creating .venv. mkdir+chown
+# upfront is portable across both.
+RUN useradd -m -u 1000 user \
+    && mkdir -p /home/user/app \
+    && chown -R user:user /home/user/app
 
 USER user
 ENV HOME=/home/user \
