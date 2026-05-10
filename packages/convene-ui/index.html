@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>Council Health — Live Deliberation</title>
+<title>The Council — Live Deliberation</title>
 <link rel="icon" type="image/png" href="logo.png" />
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -264,9 +264,9 @@
 <div class="topbar">
   <div class="topbar-inner">
     <div class="brand">
-      <img src="logo.png" alt="Council Health" />
+      <img src="logo.png" alt="The Council" />
       <div class="brand-text">
-        <div class="name">Council Health</div>
+        <div class="name">The Council</div>
         <div class="tag">Live deliberation</div>
       </div>
     </div>
@@ -359,7 +359,7 @@
   <div class="footer-inner">
     <div class="colophon">
       <img src="logo.png" alt="" />
-      <span>Council Health · multi-specialty A2A deliberation network</span>
+      <span>The Council · built on Prompt Opinion · MCP · A2A · SHARP · FHIR</span>
     </div>
     <div class="links">
       <a href="https://github.com/council-health-ai/council" target="_blank" rel="noopener">Source</a>
@@ -550,7 +550,18 @@
       const ss = state.sessionStatus;
       let msg;
       if (!state.sessionId) {
-        msg = "Open a session URL (<span class=\"mono\">?id=…</span>) to view a deliberation.";
+        msg = `
+          <div style="font-size:14px;color:var(--ink-2);max-width:640px;margin:0 auto;text-align:center;">
+            <div style="font-family:var(--serif);font-size:22px;font-weight:600;color:var(--navy-900);margin-bottom:14px;">Open a deliberation session.</div>
+            <p style="margin-bottom:18px;">The Council renders one convening at a time. Open a specific session by URL — sessions are not browseable by the public for patient-privacy reasons.</p>
+            <p style="margin:18px 0;">
+              <a href="?id=${DEMO_SESSION_ID}" style="display:inline-block;background:var(--sage-500);color:white;padding:10px 20px;border-radius:6px;text-decoration:none;font-weight:500;font-size:14px;letter-spacing:0.04em;">View the demo session →</a>
+            </p>
+            <p style="font-size:12px;color:var(--ink-3);margin-top:24px;font-style:italic;">
+              Demo data is synthesised via Synthea (synthetic FHIR R4 patients). No real patient PHI is stored or rendered in this hackathon submission.
+            </p>
+          </div>
+        `;
       } else if (ss === "active") {
         msg = `The Council is still deliberating. The plan will render here as soon as the brief is synthesised — see <a href="#deliberation">Live Deliberation</a> for in-flight progress.`;
       } else {
@@ -785,19 +796,13 @@
     state.specialties[m.role] = { status: "done" };
   }
 
+  // PRIVACY: never auto-load any other user's session. Without an explicit
+  // session id in the URL (?id=<uuid> or /c/<uuid>), render an empty state
+  // with a guided demo link instead. Per-session RLS is the next layer.
+  const DEMO_SESSION_ID = "bd662973-8b75-4350-bdca-fe39a51603fa";
+
   async function loadInitial() {
     state.sessionId = getSessionId();
-    if (!state.sessionId) {
-      const { data } = await supabase
-        .from("convening_sessions")
-        .select("id, status")
-        .order("started_at", { ascending: false })
-        .limit(1);
-      if (data?.length) {
-        state.sessionId = data[0].id;
-        state.sessionStatus = data[0].status;
-      }
-    }
     if (!state.sessionId) {
       renderAll();
       return;
