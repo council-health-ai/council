@@ -32,7 +32,7 @@
   <rect width="1320" height="1580" fill="#f8f6f1"/>
 
   <!-- Title -->
-  <text x="660" y="50" text-anchor="middle" font-size="26" font-weight="700" fill="#0d2438" letter-spacing="-0.4">The Council — Architecture</text>
+  <text x="660" y="50" text-anchor="middle" font-size="26" font-weight="700" fill="#0d2438" letter-spacing="-0.4">The Council · Architecture</text>
   <text x="660" y="78" text-anchor="middle" font-size="13" font-weight="600" fill="#4a6079" letter-spacing="0.16em">PEER A2A · SHARP-ON-MCP · LIVE FHIR · QUERYABLE AUDIT</text>
 
   <!-- ── 1. Prompt Opinion General Chat ───────────────────────── -->
